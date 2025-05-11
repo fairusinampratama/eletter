@@ -14,7 +14,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
         return view('auth.login');
     }
@@ -28,7 +28,19 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = Auth::user();
+
+        return redirect()->intended(
+            match ((int) $user->role_id) {
+                1 => route('admin-kemahasiswaan.dashboard'),
+                2 => route('ketua-umum.dashboard'),
+                3 => route('sekretaris-umum.dashboard'),
+                4 => route('ketua-panitia.dashboard'),
+                5 => route('sekretaris-panitia.dashboard'),
+                6 => route('pembina.dashboard'),
+                default => '/'
+            }
+        );
     }
 
     /**

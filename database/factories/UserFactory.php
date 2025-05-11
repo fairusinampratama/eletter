@@ -4,18 +4,12 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
-
     /**
      * Define the model's default state.
      *
@@ -24,21 +18,26 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            'username' => $this->faker->unique()->userName,
+            'password' => Hash::make('password'),
+            'fullname' => $this->faker->name,
+            'role_id' => $this->faker->randomElement([2, 3, 6]),
+            'institution_id' => $this->faker->numberBetween(1, 16),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    // Add specific states for committee roles
+    public function asCommitteeChairman()
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+        return $this->state([
+            'role_id' => 4, // Specific role for chairmen
+        ]);
+    }
+
+    public function asCommitteeSecretary()
+    {
+        return $this->state([
+            'role_id' => 5, // Specific role for secretaries
         ]);
     }
 }

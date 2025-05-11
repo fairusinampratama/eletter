@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import "tailwindcss";
+
+@theme {
+    --color-primary-50: #f0f5ff;
+    --color-primary-100: #e5edff;
+    --color-primary-200: #cddbfe;
+    --color-primary-300: #b4c6fc;
+    --color-primary-400: #8da2fb;
+    --color-primary-500: #6875f5;
+    --color-primary-600: #5850ec;
+    --color-primary-700: #5145cd;
+    --color-primary-800: #42389d;
+    --color-primary-900: #362f78;
+
+    --font-sans: "Inter", "ui-sans-serif", "system-ui", "-apple-system",
+        "system-ui", "Segoe UI", "Roboto", "Helvetica Neue", "Arial",
+        "Noto Sans", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+
+    --font-body: var(--font-sans);
+    --font-mono: "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas",
+        "Liberation Mono", "Courier New", "monospace";
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+[drawer-backdrop] {
+    z-index: 10 !important;
+}

@@ -2,47 +2,138 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name',
-        'email',
+        'username',
         'password',
+        'fullname',
+        'email',
+        'role_id',
+        'institution_id'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
-        'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    // protected static function booted()
+    // {
+    //     static::addGlobalScope('institution', function ($query) {
+    //         $user = auth()->user();
+    //         if (!$user)
+    //             return;
+
+    //         // If user is from institution (Sekretaris Umum, Ketua Umum, Pembina)
+    //         if (in_array($user->role_id, [2, 3, 6])) {
+    //             $query->where('institution_id', $user->institution_id);
+    //         }
+    //         // If user is from committee (Sekretaris Panitia, Ketua Panitia)
+    //         else if (in_array($user->role_id, [4, 5])) {
+    //             $query->whereHas('committeesAsChairman', function ($q) use ($user) {
+    //                 $q->where('institution_id', $user->institution_id);
+    //             })->orWhereHas('committeesAsSecretary', function ($q) use ($user) {
+    //                 $q->where('institution_id', $user->institution_id);
+    //             });
+    //         }
+    //     });
+    // }
+
+    public function role(): BelongsTo
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsTo(Role::class);
+    }
+
+    public function institution(): BelongsTo
+    {
+        return $this->belongsTo(Institution::class);
+    }
+
+    public function committeesAsChairman(): HasMany
+    {
+        return $this->hasMany(Committee::class, 'chairman_id');
+    }
+
+    public function committeesAsSecretary(): HasMany
+    {
+        return $this->hasMany(Committee::class, 'secretary_id');
+    }
+
+    public function isCommitteeChairman(): bool
+    {
+        return $this->committeesAsChairman()->exists();
+    }
+
+    public function isCommitteeSecretary(): bool
+    {
+        return $this->committeesAsSecretary()->exists();
+    }
+
+    public function scopeKetuaUmum($query, $institutionId)
+    {
+        return $query->where('role_id', 2)
+            ->where('institution_id', $institutionId);
+    }
+
+    public function scopeSekretarisUmum($query, $institutionId)
+    {
+        return $query->where('role_id', 3)
+            ->where('institution_id', $institutionId);
+    }
+
+    public function scopePembina($query, $institutionId)
+    {
+        return $query->where('role_id', 6)
+            ->where('institution_id', $institutionId);
+    }
+
+    public function isKetuaUmum(): bool
+    {
+        return $this->role_id === 2;
+    }
+
+    public function isSekretarisUmum(): bool
+    {
+        return $this->role_id === 3;
+    }
+
+    public function isPembina(): bool
+    {
+        return $this->role_id === 6;
+    }
+
+    public function getAuthIdentifierName()
+    {
+        return 'username';
+    }
+
+    public function scopeWithRelations($query)
+    {
+        return $query->with(['role', 'institution']);
+    }
+
+    public function scopeSearch($query, $search)
+    {
+        if ($search) {
+            return $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('fullname', 'like', "%{$search}%")
+                    ->orWhereHas('role', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('institution', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query;
     }
 }
