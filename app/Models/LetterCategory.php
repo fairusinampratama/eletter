@@ -34,7 +34,9 @@ class LetterCategory extends Model
     protected static function booted()
     {
         static::addGlobalScope('institution', function ($query) {
-            $query->where('institution_id', auth()->user()->institution_id);
+            if (auth()->check()) {
+                $query->where('institution_id', auth()->user()->institution_id);
+            }
         });
     }
 }

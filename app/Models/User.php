@@ -24,28 +24,6 @@ class User extends Authenticatable
         'password',
     ];
 
-    // protected static function booted()
-    // {
-    //     static::addGlobalScope('institution', function ($query) {
-    //         $user = auth()->user();
-    //         if (!$user)
-    //             return;
-
-    //         // If user is from institution (Sekretaris Umum, Ketua Umum, Pembina)
-    //         if (in_array($user->role_id, [2, 3, 6])) {
-    //             $query->where('institution_id', $user->institution_id);
-    //         }
-    //         // If user is from committee (Sekretaris Panitia, Ketua Panitia)
-    //         else if (in_array($user->role_id, [4, 5])) {
-    //             $query->whereHas('committeesAsChairman', function ($q) use ($user) {
-    //                 $q->where('institution_id', $user->institution_id);
-    //             })->orWhereHas('committeesAsSecretary', function ($q) use ($user) {
-    //                 $q->where('institution_id', $user->institution_id);
-    //             });
-    //         }
-    //     });
-    // }
-
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
@@ -66,6 +44,21 @@ class User extends Authenticatable
         return $this->hasMany(Committee::class, 'secretary_id');
     }
 
+    public function isChairman(): bool
+    {
+        return $this->role_id === 2;
+    }
+
+    public function isSecretary(): bool
+    {
+        return $this->role_id === 3;
+    }
+
+    public function isMentor(): bool
+    {
+        return $this->role_id === 6;
+    }
+
     public function isCommitteeChairman(): bool
     {
         return $this->committeesAsChairman()->exists();
@@ -76,37 +69,48 @@ class User extends Authenticatable
         return $this->committeesAsSecretary()->exists();
     }
 
-    public function scopeKetuaUmum($query, $institutionId)
+    public function scopeForInstitution($query)
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return $query;
+        }
+
+        // If user is from institution (Sekretaris Umum, Ketua Umum, Pembina)
+        if (in_array($user->role_id, [2, 3, 6])) {
+            return $query->where('institution_id', $user->institution_id);
+        }
+
+        // If user is from committee (Sekretaris Panitia, Ketua Panitia)
+        if (in_array($user->role_id, [4, 5])) {
+            return $query->where(function ($q) use ($user) {
+                $q->whereHas('committeesAsChairman', function ($q) use ($user) {
+                    $q->where('institution_id', $user->institution_id);
+                })->orWhereHas('committeesAsSecretary', function ($q) use ($user) {
+                    $q->where('institution_id', $user->institution_id);
+                });
+            });
+        }
+
+        return $query;
+    }
+
+    public function scopeChairman($query, $institutionId)
     {
         return $query->where('role_id', 2)
             ->where('institution_id', $institutionId);
     }
 
-    public function scopeSekretarisUmum($query, $institutionId)
+    public function scopeSecretary($query, $institutionId)
     {
         return $query->where('role_id', 3)
             ->where('institution_id', $institutionId);
     }
 
-    public function scopePembina($query, $institutionId)
+    public function scopeMentor($query, $institutionId)
     {
         return $query->where('role_id', 6)
             ->where('institution_id', $institutionId);
-    }
-
-    public function isKetuaUmum(): bool
-    {
-        return $this->role_id === 2;
-    }
-
-    public function isSekretarisUmum(): bool
-    {
-        return $this->role_id === 3;
-    }
-
-    public function isPembina(): bool
-    {
-        return $this->role_id === 6;
     }
 
     public function getAuthIdentifierName()

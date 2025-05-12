@@ -5,13 +5,7 @@ namespace App\Http\Controllers\KetuaUmum;
 use App\Http\Controllers\KetuaUmumController;
 use App\Models\Letter;
 use App\Models\LetterCategory;
-use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\Storage;
-use App\Services\PDFService;
 use App\Models\User;
-use App\Services\ECDSAService;
 
 class SuratPengurusController extends KetuaUmumController
 {
@@ -22,11 +16,14 @@ class SuratPengurusController extends KetuaUmumController
         $userInstitutionId = auth()->user()->institution_id;
 
         $letters = Letter::whereHas('category', function ($query) use ($userInstitutionId) {
-            $query->where('institution_id', $userInstitutionId);
+            $query->where('institution_id', $userInstitutionId)
+                ->whereNull('committee_id'); // Exclude committee letters
         })->with(['category', 'creator'])->get();
 
-        // Only show letter categories from the same institution as the user
-        $categories = LetterCategory::where('institution_id', $userInstitutionId)->get();
+        // Only show letter categories from the same institution and not from a committee
+        $categories = LetterCategory::where('institution_id', $userInstitutionId)
+            ->whereNull('committee_id')
+            ->get();
 
         // Get users from the same institution for signer selection
         $users = User::where('institution_id', $userInstitutionId)->get();

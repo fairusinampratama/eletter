@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\VerificationController;
+use Livewire\Livewire;
 
 Route::get('/', function () {
     if (Auth::check()) {

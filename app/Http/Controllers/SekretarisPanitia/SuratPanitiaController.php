@@ -12,26 +12,38 @@ use Illuminate\Support\Facades\Storage;
 use App\Services\PDFService;
 use App\Models\User;
 use App\Services\ECDSAService;
+use App\Models\Committee;
 
 class SuratPanitiaController extends SekretarisPanitiaController
 {
-    public $title = 'Surat Pengurus';
+    public $title = 'Surat Panitia';
 
     public function index()
     {
-        $userInstitutionId = auth()->user()->institution_id;
+        $currentUser = auth()->user();
+        $userInstitutionId = $currentUser->institution_id;
 
-        $letters = Letter::whereHas('category', function ($query) use ($userInstitutionId) {
-            $query->where('institution_id', $userInstitutionId);
+        // Get the committee where user is secretary
+        $committee = Committee::where('secretary_id', $currentUser->id)->first();
+        if (!$committee) {
+            return redirect()->back()->with('error', 'Anda tidak terdaftar sebagai sekretaris panitia.');
+        }
+
+        // Get letters through category relationship for this committee
+        $letters = Letter::whereHas('category', function ($query) use ($committee) {
+            $query->where('institution_id', $committee->institution_id)
+                ->where('committee_id', $committee->id);
         })->with(['category', 'creator'])->get();
 
-        // Only show letter categories from the same institution as the user
-        $categories = LetterCategory::where('institution_id', $userInstitutionId)->get();
+        // Only show letter categories from this committee
+        $categories = LetterCategory::where('institution_id', $userInstitutionId)
+            ->where('committee_id', $committee->id)
+            ->get();
 
         // Get users from the same institution for signer selection
         $users = User::where('institution_id', $userInstitutionId)->get();
 
-        return view('dashboard.sekretaris-umum.surat-pengurus.index', [
+        return view('dashboard.sekretaris-panitia.surat-panitia.index', [
             'menuItems' => $this->menuItems,
             'title' => $this->title,
             'letters' => $letters,
@@ -54,19 +66,29 @@ class SuratPanitiaController extends SekretarisPanitiaController
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput()
-                ->with('error', $e->getMessage() ?: 'Gagal menyimpan surat pengurus. Silakan periksa kembali data yang diinput.');
+                ->with('error', $e->getMessage() ?: 'Gagal menyimpan surat panitia. Silakan periksa kembali data yang diinput.');
         }
 
         try {
-            // Get the institution's users
-            $userInstitutionId = auth()->user()->institution_id;
+            // Get the current user and their institution
             $currentUser = auth()->user();
+            $userInstitutionId = $currentUser->institution_id;
 
-            // Get default Sekretaris Umum and Ketua Umum for the institution
-            $sekretarisUmum = User::where('institution_id', $userInstitutionId)
-                ->where('role_id', 3) // Role ID for Sekretaris Umum
+            // Get the committee where user is secretary
+            $committee = Committee::where('secretary_id', $currentUser->id)->first();
+            if (!$committee) {
+                throw new \Exception('Anda tidak terdaftar sebagai sekretaris panitia.');
+            }
+
+            // Verify the category belongs to this committee
+            $category = LetterCategory::where('id', $request->category_id)
+                ->where('committee_id', $committee->id)
                 ->firstOrFail();
 
+            // Get Ketua Panitia for this committee
+            $ketuaPanitia = User::where('id', $committee->chairman_id)->firstOrFail();
+
+            // Get Ketua Umum for the institution
             $ketuaUmum = User::where('institution_id', $userInstitutionId)
                 ->where('role_id', 2) // Role ID for Ketua Umum
                 ->firstOrFail();
@@ -74,7 +96,7 @@ class SuratPanitiaController extends SekretarisPanitiaController
             // Validate Pembina if selected
             if ($request->pembina_id) {
                 $pembina = User::findOrFail($request->pembina_id);
-                if ($pembina->institution_id !== $userInstitutionId || $pembina->role_id !== 6) {
+                if (!$pembina->isMentor() || $pembina->institution_id !== $userInstitutionId) {
                     throw ValidationException::withMessages([
                         'pembina_id' => 'Invalid Pembina selected'
                     ]);
@@ -91,6 +113,8 @@ class SuratPanitiaController extends SekretarisPanitiaController
                 'code' => $request->code,
                 'category_id' => $request->category_id,
                 'creator_id' => $currentUser->id,
+                'institution_id' => $userInstitutionId,
+                'committee_id' => $committee->id,
                 'file_path' => $path,
                 'file_hash' => $fileHash,
                 'date' => $request->date,
@@ -100,14 +124,27 @@ class SuratPanitiaController extends SekretarisPanitiaController
             // Create letter record
             $letter = Letter::create($letterData);
 
-            // Create signature records in order
-            $signers = [
-                ['id' => $sekretarisUmum->id, 'order' => 1],
-                ['id' => $ketuaUmum->id, 'order' => 2]
-            ];
-
-            if ($request->pembina_id) {
-                $signers[] = ['id' => $request->pembina_id, 'order' => 3];
+            // Determine if this is a committee letter or a general letter
+            $isCommitteeLetter = $category->committee_id !== null;
+            $signers = [];
+            if ($isCommitteeLetter) {
+                // Committee letter: Sekretaris Panitia, Ketua Panitia, Ketua Umum, Pembina (optional)
+                $signers[] = ['id' => $currentUser->id, 'order' => 1]; // Sekretaris Panitia
+                $signers[] = ['id' => $ketuaPanitia->id, 'order' => 2]; // Ketua Panitia
+                $signers[] = ['id' => $ketuaUmum->id, 'order' => 3]; // Ketua Umum
+                if ($request->pembina_id) {
+                    $signers[] = ['id' => $request->pembina_id, 'order' => 4]; // Pembina (optional)
+                }
+            } else {
+                // General letter: Sekretaris Umum, Ketua Umum, Pembina (optional)
+                $sekretarisUmum = User::where('institution_id', $userInstitutionId)
+                    ->where('role_id', 3) // Sekretaris Umum
+                    ->firstOrFail();
+                $signers[] = ['id' => $sekretarisUmum->id, 'order' => 1]; // Sekretaris Umum
+                $signers[] = ['id' => $ketuaUmum->id, 'order' => 2]; // Ketua Umum
+                if ($request->pembina_id) {
+                    $signers[] = ['id' => $request->pembina_id, 'order' => 3]; // Pembina (optional)
+                }
             }
 
             foreach ($signers as $signer) {
@@ -129,15 +166,15 @@ class SuratPanitiaController extends SekretarisPanitiaController
                 ]);
             }
 
-            return redirect()->route('sekretaris-umum.surat-pengurus.index')
-                ->with('success', 'Surat pengurus berhasil ditambahkan.');
+            return redirect()->route('sekretaris-panitia.surat-panitia.index')
+                ->with('success', 'Surat panitia berhasil ditambahkan.');
         } catch (ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Gagal menambah surat pengurus: ' . $e->getMessage())
+                ->with('error', 'Gagal menambah surat panitia: ' . $e->getMessage())
                 ->withInput();
         }
     }

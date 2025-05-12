@@ -14,20 +14,16 @@ class SuratPengurusController extends PembinaController
     public function index()
     {
         $userInstitutionId = auth()->user()->institution_id;
-        $currentUserId = auth()->user()->id;
 
         $letters = Letter::whereHas('category', function ($query) use ($userInstitutionId) {
-            $query->where('institution_id', $userInstitutionId);
-        })
-            ->whereHas('signatures', function ($query) use ($currentUserId) {
-                $query->where('signer_id', $currentUserId)
-                    ->where('order', 3); // Pembina is the third signer (order: 3)
-            })
-            ->with(['category', 'creator', 'signatures.signer'])
-            ->get();
+            $query->where('institution_id', $userInstitutionId)
+                ->whereNull('committee_id'); // Exclude committee letters
+        })->with(['category', 'creator'])->get();
 
-        // Only show letter categories from the same institution as the user
-        $categories = LetterCategory::where('institution_id', $userInstitutionId)->get();
+        // Only show letter categories from the same institution and not from a committee
+        $categories = LetterCategory::where('institution_id', $userInstitutionId)
+            ->whereNull('committee_id')
+            ->get();
 
         // Get users from the same institution for signer selection
         $users = User::where('institution_id', $userInstitutionId)->get();

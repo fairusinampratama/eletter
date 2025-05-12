@@ -29,14 +29,13 @@ class Letter extends Model
             if (!$user)
                 return;
 
-            // If user is from institution (Sekretaris Umum, Ketua Umum, Pembina)
+            // Ketua Umum UKM, Sekretaris Umum UKM, Pembina: show all letters from their institution (committee and non-committee)
             if (in_array($user->role_id, [2, 3, 6])) {
                 $query->whereHas('category', function ($q) use ($user) {
-                    $q->where('institution_id', $user->institution_id)
-                        ->whereNull('committee_id');
+                    $q->where('institution_id', $user->institution_id);
                 });
             }
-            // If user is from committee (Sekretaris Panitia, Ketua Panitia)
+            // Committee roles: only their own committee's letters
             else if (in_array($user->role_id, [4, 5])) {
                 $query->whereHas('category', function ($q) use ($user) {
                     $q->whereHas('committee', function ($q) use ($user) {
@@ -49,86 +48,6 @@ class Letter extends Model
                 });
             }
         });
-
-        // Create signatures when letter is created
-        static::created(function ($letter) {
-            $creator = $letter->creator;
-            $institutionId = $letter->category->institution_id;
-
-            if ($creator->isGeneralSecretary()) {
-                // Order: Sekretaris Umum -> Ketua Umum -> Pembina
-                $this->createSignaturesForInstitutionLetter($letter, $institutionId);
-            } else if ($creator->isCommitteeSecretary()) {
-                // Order: Sekretaris Panitia -> Ketua Panitia -> Ketua Umum -> Pembina
-                $this->createSignaturesForCommitteeLetter($letter, $creator);
-            }
-        });
-    }
-
-    protected static function createSignaturesForInstitutionLetter($letter, $institutionId)
-    {
-        // 1. Sekretaris Umum (creator)
-        $letter->signatures()->create([
-            'signer_id' => $letter->creator_id,
-            'order' => 1
-        ]);
-
-        // 2. Ketua Umum
-        $ketuaUmum = User::ketuaUmum($institutionId)->first();
-        if ($ketuaUmum) {
-            $letter->signatures()->create([
-                'signer_id' => $ketuaUmum->id,
-                'order' => 2
-            ]);
-        }
-
-        // 3. Pembina (Optional)
-        $pembina = User::pembina($institutionId)->first();
-        if ($pembina) {
-            $letter->signatures()->create([
-                'signer_id' => $pembina->id,
-                'order' => 3
-            ]);
-        }
-    }
-
-    protected static function createSignaturesForCommitteeLetter($letter, $creator)
-    {
-        $committee = $creator->committeesAsSecretary()->first();
-        if (!$committee)
-            return;
-
-        // 1. Sekretaris Panitia (creator)
-        $letter->signatures()->create([
-            'signer_id' => $letter->creator_id,
-            'order' => 1
-        ]);
-
-        // 2. Ketua Panitia
-        if ($committee->chairman_id) {
-            $letter->signatures()->create([
-                'signer_id' => $committee->chairman_id,
-                'order' => 2
-            ]);
-        }
-
-        // 3. Ketua Umum
-        $ketuaUmum = User::ketuaUmum($committee->institution_id)->first();
-        if ($ketuaUmum) {
-            $letter->signatures()->create([
-                'signer_id' => $ketuaUmum->id,
-                'order' => 3
-            ]);
-        }
-
-        // 4. Pembina (Optional)
-        $pembina = User::pembina($committee->institution_id)->first();
-        if ($pembina) {
-            $letter->signatures()->create([
-                'signer_id' => $pembina->id,
-                'order' => 4
-            ]);
-        }
     }
 
     public function category()
@@ -225,5 +144,35 @@ class Letter extends Model
         // Check if all previous signatures are completed
         $previousSignatures = $signatures->where('order', '<', $userSignature->order);
         return $previousSignatures->every(fn($sig) => $sig->signed_at !== null);
+    }
+
+    public function scopeForInstitution($query, $institutionId)
+    {
+        return $query->whereHas('category', function ($q) use ($institutionId) {
+            $q->where('institution_id', $institutionId);
+        });
+    }
+
+    public function scopeCommitteeOnly($query)
+    {
+        return $query->whereHas('category', function ($q) {
+            $q->whereNotNull('committee_id');
+        });
+    }
+
+    public function scopeNonCommittee($query)
+    {
+        return $query->whereHas('category', function ($q) {
+            $q->whereNull('committee_id');
+        });
+    }
+
+    public function scopeHasMentorSignature($query)
+    {
+        return $query->whereHas('signatures', function ($q) {
+            $q->whereHas('signer', function ($q) {
+                $q->where('role_id', 6); // Role ID for Pembina
+            });
+        });
     }
 }

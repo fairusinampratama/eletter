@@ -66,6 +66,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
             })->name('dashboard');
 
             Route::resource('surat-panitia', \App\Http\Controllers\SekretarisPanitia\SuratPanitiaController::class);
+            Route::resource('kategori-surat', \App\Http\Controllers\SekretarisPanitia\KategoriSuratController::class);
         });
     });
 

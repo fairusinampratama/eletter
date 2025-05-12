@@ -4,9 +4,8 @@
 <x-alerts.flash-messages />
 
 <x-dashboard.page-wrapper :title="$title" :breadcrumbItems="[['label' => 'Surat Pengurus']]" :showFilter="true"
-    :filterRoute="'ketua-umum.surat-pengurus.index'" :filterPlaceholder="'Cari surat pengurus...'"
-    :showAddButton="false">
-    <livewire:table :model="App\Models\Letter::class" :routePrefix="'ketua-umum.surat-pengurus'" :columns="[
+    :filterRoute="'pembina.surat-pengurus.index'" :filterPlaceholder="'Cari surat pengurus...'" :showAddButton="false">
+    <livewire:table :model="App\Models\Letter::class" :routePrefix="'pembina.surat-pengurus'" :columns="[
                 ['field' => 'code', 'label' => 'Kode'],
                 ['field' => 'category.name', 'label' => 'Kategori'],
                 ['field' => 'creator.fullname', 'label' => 'Pembuat'],
@@ -17,7 +16,7 @@
                 ['type' => 'confirm', 'label' => 'Tandatangani Surat'],
                 ['type' => 'view', 'label' => 'Lihat Surat', 'route' => 'letters.view'],
             ]" :withRelations="['category', 'creator', 'signatures.signer']" :selectable="false" :sortable="true"
-        :defaultSort="['field' => 'date', 'direction' => 'desc']" />
+        :defaultSort="['field' => 'date', 'direction' => 'desc']" :scopes="['nonCommittee', 'hasMentorSignature']" />
     <!-- Sign Letter Confirmation Modal -->
     <x-modals.confirm-modal id="sign-letter-modal" title="Tandatangani Surat"
         message="Apakah Anda yakin ingin menandatangani surat ini?" :route="route('signatures.sign')"

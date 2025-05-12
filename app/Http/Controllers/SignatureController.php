@@ -40,7 +40,7 @@ class SignatureController extends Controller
 
             // If signature record does not exist, create it with proper order
             if (!$signature) {
-                $order = $this->getOrderForRole($currentUser->role_id);
+                $order = $this->getOrderForRole($currentUser->role_id, $letter);
                 $signature = $letter->signatures()->create([
                     'signer_id' => $currentUser->id,
                     'order' => $order,
@@ -66,14 +66,27 @@ class SignatureController extends Controller
         }
     }
 
-    protected function getOrderForRole($roleId)
+    protected function getOrderForRole($roleId, $letter)
     {
-        // Define the order for each role
-        $roleOrderMap = [
-            3 => 1, // Sekretaris Umum: First
-            2 => 2, // Ketua Umum: Second
-            6 => 3, // Pembina: Third
-        ];
+        // Detect if committee letter
+        $isCommitteeLetter = $letter->category->committee_id !== null;
+
+        if ($isCommitteeLetter) {
+            // Committee: Sekretaris Panitia, Ketua Panitia, Ketua Umum, Pembina
+            $roleOrderMap = [
+                4 => 1, // Sekretaris Panitia
+                5 => 2, // Ketua Panitia
+                2 => 3, // Ketua Umum
+                6 => 4, // Pembina
+            ];
+        } else {
+            // General: Sekretaris Umum, Ketua Umum, Pembina
+            $roleOrderMap = [
+                3 => 1, // Sekretaris Umum
+                2 => 2, // Ketua Umum
+                6 => 3, // Pembina
+            ];
+        }
 
         return $roleOrderMap[$roleId] ?? null;
     }
@@ -101,7 +114,7 @@ class SignatureController extends Controller
         }
 
         // Get the required role for this signature order
-        $requiredRole = $this->getRequiredRoleForOrder($signature->order);
+        $requiredRole = $this->getRequiredRoleForOrder($signature->order, $letter);
         if ($user->role_id !== $requiredRole) {
             return false;
         }
@@ -109,14 +122,24 @@ class SignatureController extends Controller
         return true;
     }
 
-    protected function getRequiredRoleForOrder($order)
+    protected function getRequiredRoleForOrder($order, $letter)
     {
-        // Define the role requirements for each signature order
-        $roleMap = [
-            1 => 3, // First signature: Sekretaris Umum (role_id: 3)
-            2 => 2, // Second signature: Ketua Umum (role_id: 2)
-            3 => 6, // Third signature: Pembina (role_id: 6)
-        ];
+        $isCommitteeLetter = $letter->category->committee_id !== null;
+
+        if ($isCommitteeLetter) {
+            $roleMap = [
+                1 => 5, // Sekretaris Panitia
+                2 => 4, // Ketua Panitia
+                3 => 2, // Ketua Umum
+                4 => 6, // Pembina
+            ];
+        } else {
+            $roleMap = [
+                1 => 3, // Sekretaris Umum
+                2 => 2, // Ketua Umum
+                3 => 6, // Pembina
+            ];
+        }
 
         return $roleMap[$order] ?? null;
     }

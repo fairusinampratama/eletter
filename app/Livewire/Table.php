@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 
 class Table extends Component
 {
@@ -23,6 +22,7 @@ class Table extends Component
     public $search = '';
     public $sortField = null;
     public $sortDirection = 'asc';
+    public $scopes = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -30,7 +30,7 @@ class Table extends Component
         'sortDirection' => ['except' => 'asc'],
     ];
 
-    public function mount($model, $routePrefix = null, $columns = [], $actions = [], $searchable = true, $withRelations = [], $bulkActions = [], $selectable = false)
+    public function mount($model, $routePrefix = null, $columns = [], $actions = [], $searchable = true, $withRelations = [], $bulkActions = [], $selectable = false, $scopes = [])
     {
         $this->model = $model;
         $this->routePrefix = $routePrefix;
@@ -40,6 +40,7 @@ class Table extends Component
         $this->withRelations = $withRelations;
         $this->bulkActions = $bulkActions;
         $this->selectable = $selectable;
+        $this->scopes = $scopes;
     }
 
     public function updatedSelectAll($value)
@@ -116,6 +117,11 @@ class Table extends Component
         // Load relations
         if (!empty($this->withRelations)) {
             $query->with($this->withRelations);
+        }
+
+        // Apply scopes
+        foreach ($this->scopes as $scope) {
+            $query->$scope();
         }
 
         // Apply search using model's scopeSearch

@@ -3,9 +3,9 @@
 @section('content')
 <x-alerts.flash-messages />
 
-<x-dashboard.page-wrapper :title="$title" :breadcrumbItems="[['label' => 'Surat Pengurus']]" :showFilter="true"
-    :filterRoute="'sekretaris-panitia.surat-panitia.index'" :filterPlaceholder="'Cari surat pengurus...'"
-    :showAddButton="true" :addButtonText="'Tambah Surat Pengurus'" :addButtonId="'add-letter-modal'">
+<x-dashboard.page-wrapper :title="$title" :breadcrumbItems="[['label' => 'Surat Panitia']]" :showFilter="true"
+    :filterRoute="'sekretaris-panitia.surat-panitia.index'" :filterPlaceholder="'Cari surat panitia...'"
+    :showAddButton="true" :addButtonText="'Tambah Surat Panitia'" :addButtonId="'add-letter-modal'">
     <livewire:table :model="App\Models\Letter::class" :routePrefix="'sekretaris-panitia.surat-panitia'" :columns="[
                 ['field' => 'code', 'label' => 'Kode'],
                 ['field' => 'category.name', 'label' => 'Kategori'],
@@ -20,7 +20,7 @@
         :defaultSort="['field' => 'date', 'direction' => 'desc']" />
 
     <!-- Add Letter Modal -->
-    <x-modals.add-modal id="add-letter-modal" title="Tambah Surat Pengurus"
+    <x-modals.add-modal id="add-letter-modal" title="Tambah Surat Panitia"
         :route="route('sekretaris-panitia.surat-panitia.store')" :fields="[
             [
                 'name' => 'code',
