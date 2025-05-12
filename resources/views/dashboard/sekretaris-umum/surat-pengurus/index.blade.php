@@ -17,7 +17,7 @@
                 ['type' => 'confirm', 'label' => 'Tandatangani Surat'],
                 ['type' => 'view', 'label' => 'Lihat Surat'],
             ]" :withRelations="['category', 'creator', 'signatures.signer']" :selectable="false" :sortable="true"
-        :defaultSort="['field' => 'date', 'direction' => 'desc']" />
+        :defaultSort="['field' => 'date', 'direction' => 'desc']" :scopes="['nonCommittee']" />
 
     <!-- Add Letter Modal -->
     <x-modals.add-modal id="add-letter-modal" title="Tambah Surat Pengurus"

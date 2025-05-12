@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Committee extends Model
 {
@@ -39,6 +40,13 @@ class Committee extends Model
 
     protected static function booted()
     {
+        // Add global scope to filter by institution
+        static::addGlobalScope('institution', function ($query) {
+            if (Auth::check()) {
+                $query->where('institution_id', Auth::user()->institution_id);
+            }
+        });
+
         static::created(function ($committee) {
             // Create a letter category for this committee
             LetterCategory::create([

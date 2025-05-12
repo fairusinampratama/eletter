@@ -19,7 +19,6 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
                 return redirect()->route('admin-kemahasiswaan.ukm.index');
             })->name('dashboard');
 
-            Route::resource('surat', \App\Http\Controllers\AdminKemahasiswaan\SuratController::class);
             Route::resource('pengguna', \App\Http\Controllers\AdminKemahasiswaan\PenggunaController::class);
             Route::resource('ukm', \App\Http\Controllers\AdminKemahasiswaan\UkmController::class);
         });
@@ -46,6 +45,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
             Route::resource('kategori-surat', \App\Http\Controllers\SekretarisUmum\KategoriSuratController::class);
             Route::resource('kepanitiaan', \App\Http\Controllers\SekretarisUmum\KepanitiaanController::class);
             Route::resource('surat-panitia', \App\Http\Controllers\SekretarisUmum\SuratPanitiaController::class);
+            Route::post('kepanitiaan/store-user', [\App\Http\Controllers\SekretarisUmum\KepanitiaanController::class, 'storeUser'])->name('kepanitiaan.store-user');
         });
     });
 

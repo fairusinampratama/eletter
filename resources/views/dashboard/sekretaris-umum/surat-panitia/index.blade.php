@@ -19,10 +19,5 @@
             ]" :withRelations="['category', 'creator', 'signatures.signer']" :selectable="false" :sortable="true"
         :defaultSort="['field' => 'date', 'direction' => 'desc']" :scopes="['committeeOnly']" />
 
-    <!-- Sign Letter Confirmation Modal -->
-    <x-modals.confirm-modal id="sign-letter-modal" title="Tandatangani Surat"
-        message="Apakah Anda yakin ingin menandatangani surat ini?" :route="route('signatures.sign')"
-        confirmText="Ya, Tandatangani" cancelText="Batal" type="confirm" />
-
 </x-dashboard.page-wrapper>
 @endsection

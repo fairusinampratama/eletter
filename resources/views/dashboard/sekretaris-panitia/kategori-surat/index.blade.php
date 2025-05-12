@@ -6,14 +6,15 @@
 <x-dashboard.page-wrapper :title="$title" :breadcrumbItems="[['label' => 'Kategori Surat']]" :showFilter="true"
     :filterRoute="'sekretaris-panitia.kategori-surat.index'" :filterPlaceholder="'Cari kategori surat...'"
     :showAddButton="true" :addButtonText="'Tambah Kategori Surat'" :addButtonId="'add-letter-category-modal'">
-    <livewire:table :model="App\Models\LetterCategory::class" :routePrefix="'sekretaris-panitia.kategori-surat'" :columns="[
+    <livewire:table :model="App\Models\LetterCategory::class" :routePrefix="'sekretaris-panitia.kategori-surat'"
+        :columns="[
                 ['field' => 'name', 'label' => 'Nama Kategori']
             ]" :actions="[
                 ['type' => 'edit', 'label' => 'Edit Kategori'],
                 ['type' => 'delete', 'label' => 'Hapus Kategori'],
             ]" :selectable="true" :bulkActions="[
             ['type' => 'delete', 'label' => 'Hapus'],
-        ]" :sortable="true" :defaultSort="['field' => 'name', 'direction' => 'asc']" />
+        ]" :sortable="true" :defaultSort="['field' => 'id', 'direction' => 'desc']" :scopes="['committeeOnly']" />
 
 
     <!-- Add Letter Category Modal -->

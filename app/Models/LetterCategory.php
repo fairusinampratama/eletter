@@ -39,4 +39,17 @@ class LetterCategory extends Model
             }
         });
     }
+
+    // Only categories that are NOT for a committee (institutional)
+    public function scopeNonCommittee($query)
+    {
+        return $query->whereNull('committee_id');
+    }
+
+    // Only categories for a specific committee
+    public function scopeCommitteeOnly($query)
+    {
+        return $query->whereNotNull('committee_id');
+    }
+
 }

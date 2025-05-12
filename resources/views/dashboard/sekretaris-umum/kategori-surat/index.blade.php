@@ -13,7 +13,7 @@
                 ['type' => 'delete', 'label' => 'Hapus Kategori'],
             ]" :selectable="true" :bulkActions="[
             ['type' => 'delete', 'label' => 'Hapus'],
-        ]" :sortable="true" :defaultSort="['field' => 'name', 'direction' => 'asc']" />
+        ]" :sortable="true" :defaultSort="['field' => 'id', 'direction' => 'desc']" :scopes="['nonCommittee']" />
 
 
     <!-- Add Letter Category Modal -->

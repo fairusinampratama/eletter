@@ -16,7 +16,7 @@
                 ['type' => 'delete', 'label' => 'Hapus Pengguna'],
             ]" :withRelations="['role', 'institution']" :bulkActions="[
                 ['type' => 'delete', 'label' => 'Hapus'],
-            ]" :selectable="true" :sortable="true" :defaultSort="['field' => 'username', 'direction' => 'asc']" />
+            ]" :selectable="true" :sortable="true" :defaultSort="['field' => 'id', 'direction' => 'desc']" />
 
     <!-- Add User Modal -->
     <x-modals.add-modal id="add-user-modal" title="Tambah Pengguna" :route="route('admin-kemahasiswaan.pengguna.store')"

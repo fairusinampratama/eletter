@@ -23,6 +23,7 @@ class Table extends Component
     public $sortField = null;
     public $sortDirection = 'asc';
     public $scopes = [];
+    public $defaultSort = null;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -30,7 +31,7 @@ class Table extends Component
         'sortDirection' => ['except' => 'asc'],
     ];
 
-    public function mount($model, $routePrefix = null, $columns = [], $actions = [], $searchable = true, $withRelations = [], $bulkActions = [], $selectable = false, $scopes = [])
+    public function mount($model, $routePrefix = null, $columns = [], $actions = [], $searchable = true, $withRelations = [], $bulkActions = [], $selectable = false, $scopes = [], $defaultSort = null)
     {
         $this->model = $model;
         $this->routePrefix = $routePrefix;
@@ -41,6 +42,13 @@ class Table extends Component
         $this->bulkActions = $bulkActions;
         $this->selectable = $selectable;
         $this->scopes = $scopes;
+        $this->defaultSort = $defaultSort;
+
+        // Set default sort if not already set
+        if ($this->defaultSort && !$this->sortField) {
+            $this->sortField = $this->defaultSort['field'] ?? null;
+            $this->sortDirection = $this->defaultSort['direction'] ?? 'asc';
+        }
     }
 
     public function updatedSelectAll($value)

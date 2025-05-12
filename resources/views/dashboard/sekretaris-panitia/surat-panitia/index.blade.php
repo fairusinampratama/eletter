@@ -17,7 +17,7 @@
                 ['type' => 'confirm', 'label' => 'Tandatangani Surat'],
                 ['type' => 'view', 'label' => 'Lihat Surat'],
             ]" :withRelations="['category', 'creator', 'signatures.signer']" :selectable="false" :sortable="true"
-        :defaultSort="['field' => 'date', 'direction' => 'desc']" />
+        :defaultSort="['field' => 'date', 'direction' => 'desc']" :scopes="['committeeOnly']" />
 
     <!-- Add Letter Modal -->
     <x-modals.add-modal id="add-letter-modal" title="Tambah Surat Panitia"
@@ -63,7 +63,7 @@
                 'label_text' => $users->where('role_id', 6)->first()->fullname,
                 'helper' => 'Bersifat opsional'
             ]
-        ]" />
+        ]" :scopes="['committeeOnly']" />
 
     <!-- Sign Letter Confirmation Modal -->
     <x-modals.confirm-modal id="sign-letter-modal" title="Tandatangani Surat"

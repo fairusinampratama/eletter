@@ -13,7 +13,7 @@
                 ['type' => 'delete', 'label' => 'Hapus UKM'],
             ]" :bulkActions="[
                 ['type' => 'delete', 'label' => 'Hapus'],
-            ]" :selectable="true" :sortable="true" :defaultSort="['field' => 'name', 'direction' => 'asc']" />
+            ]" :selectable="true" :sortable="true" :defaultSort="['field' => 'id', 'direction' => 'desc']" />
 
     <!-- Add Institution Modal -->
     <x-modals.add-modal id="add-institution-modal" title="Tambah UKM" :route="route('admin-kemahasiswaan.ukm.store')"

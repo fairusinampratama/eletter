@@ -25,8 +25,10 @@ class SuratPengurusController extends SekretarisUmumController
             $query->where('institution_id', $userInstitutionId);
         })->with(['category', 'creator'])->get();
 
-        // Only show letter categories from the same institution as the user
-        $categories = LetterCategory::where('institution_id', $userInstitutionId)->get();
+        // Only show letter categories from the same institution and NOT from a committee
+        $categories = LetterCategory::nonCommittee()
+            ->where('institution_id', $userInstitutionId)
+            ->get();
 
         // Get users from the same institution for signer selection
         $users = User::where('institution_id', $userInstitutionId)->get();
