@@ -55,6 +55,24 @@
                 'colspan' => 6
             ],
             [
+                'name' => 'sekretaris_umum_id',
+                'label' => 'Sekretaris Umum',
+                'type' => 'toggle',
+                'required' => false,
+                'value' => $users->where('role_id', 3)->first()->id,
+                'label_text' => $users->where('role_id', 3)->first()->fullname,
+                'helper' => 'Bersifat opsional'
+            ],
+            [
+                'name' => 'ketua_umum_id',
+                'label' => 'Ketua Umum',
+                'type' => 'toggle',
+                'required' => true,
+                'value' => $users->where('role_id', 2)->first()->id,
+                'label_text' => $users->where('role_id', 2)->first()->fullname,
+                'helper' => 'Bersifat wajib'
+            ],
+            [
                 'name' => 'pembina_id',
                 'label' => 'Pembina',
                 'type' => 'toggle',

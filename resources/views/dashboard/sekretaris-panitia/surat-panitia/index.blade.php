@@ -55,6 +55,33 @@
                 'colspan' => 6
             ],
             [
+                'name' => 'sekretaris_panitia_id',
+                'label' => 'Sekretaris Panitia',
+                'type' => 'toggle',
+                'required' => false,
+                'value' => $users->where('role_id', 5)->first()->id,
+                'label_text' => $users->where('role_id', 5)->first()->fullname,
+                'helper' => 'Bersifat opsional'
+            ],
+            [
+                'name' => 'ketua_panitia_id',
+                'label' => 'Ketua Panitia',
+                'type' => 'toggle',
+                'required' => true,
+                'value' => $users->where('role_id', 4)->first()->id,
+                'label_text' => $users->where('role_id', 4)->first()->fullname,
+                'helper' => 'Bersifat wajib'
+            ],
+            [
+                'name' => 'ketua_umum_id',
+                'label' => 'Ketua Umum',
+                'type' => 'toggle',
+                'required' => true,
+                'value' => $users->where('role_id', 2)->first()->id,
+                'label_text' => $users->where('role_id', 2)->first()->fullname,
+                'helper' => 'Bersifat wajib'
+            ],
+            [
                 'name' => 'pembina_id',
                 'label' => 'Pembina',
                 'type' => 'toggle',

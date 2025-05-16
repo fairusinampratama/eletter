@@ -9,6 +9,35 @@ use Illuminate\Support\Facades\Auth;
 
 class SignatureController extends Controller
 {
+    // Define role mappings as constants
+    private const COMMITTEE_ROLE_MAP = [
+        'order_to_role' => [
+            1 => 4, // Sekretaris Panitia
+            2 => 5, // Ketua Panitia
+            3 => 2, // Ketua Umum
+            4 => 6, // Pembina
+        ],
+        'role_to_order' => [
+            4 => 1, // Sekretaris Panitia
+            5 => 2, // Ketua Panitia
+            2 => 3, // Ketua Umum
+            6 => 4, // Pembina
+        ]
+    ];
+
+    private const GENERAL_ROLE_MAP = [
+        'order_to_role' => [
+            1 => 3, // Sekretaris Umum
+            2 => 2, // Ketua Umum
+            3 => 6, // Pembina
+        ],
+        'role_to_order' => [
+            3 => 1, // Sekretaris Umum
+            2 => 2, // Ketua Umum
+            6 => 3, // Pembina
+        ]
+    ];
+
     public function sign(Request $request, ECDSAService $ecdsaService)
     {
         $request->validate([
@@ -68,27 +97,14 @@ class SignatureController extends Controller
 
     protected function getOrderForRole($roleId, $letter)
     {
-        // Detect if committee letter
-        $isCommitteeLetter = $letter->category->committee_id !== null;
+        $roleMap = $this->getRoleMap($letter);
+        return $roleMap['role_to_order'][$roleId] ?? null;
+    }
 
-        if ($isCommitteeLetter) {
-            // Committee: Sekretaris Panitia, Ketua Panitia, Ketua Umum, Pembina
-            $roleOrderMap = [
-                4 => 1, // Sekretaris Panitia
-                5 => 2, // Ketua Panitia
-                2 => 3, // Ketua Umum
-                6 => 4, // Pembina
-            ];
-        } else {
-            // General: Sekretaris Umum, Ketua Umum, Pembina
-            $roleOrderMap = [
-                3 => 1, // Sekretaris Umum
-                2 => 2, // Ketua Umum
-                6 => 3, // Pembina
-            ];
-        }
-
-        return $roleOrderMap[$roleId] ?? null;
+    protected function getRequiredRoleForOrder($order, $letter)
+    {
+        $roleMap = $this->getRoleMap($letter);
+        return $roleMap['order_to_role'][$order] ?? null;
     }
 
     protected function isAuthorizedToSign(Letter $letter, $user)
@@ -98,49 +114,27 @@ class SignatureController extends Controller
             return false;
         }
 
-        // Check if user is one of the designated signers
-        $isDesignatedSigner = $letter->signatures()
-            ->where('signer_id', $user->id)
-            ->exists();
-
-        if (!$isDesignatedSigner) {
-            return false;
-        }
-
-        // Check if user's role matches the required role for this signature
+        // Find user's signature record
         $signature = $letter->signatures()->where('signer_id', $user->id)->first();
         if (!$signature) {
             return false;
         }
 
-        // Get the required role for this signature order
-        $requiredRole = $this->getRequiredRoleForOrder($signature->order, $letter);
-        if ($user->role_id !== $requiredRole) {
-            return false;
-        }
+        // Check if all previous signers have signed
+        $previousSignatures = $letter->signatures()
+            ->where('order', '<', $signature->order)
+            ->whereNotNull('signed_at')
+            ->count();
 
-        return true;
+        $requiredPreviousSignatures = $signature->order - 1;
+
+        return $previousSignatures >= $requiredPreviousSignatures;
     }
 
-    protected function getRequiredRoleForOrder($order, $letter)
+    private function getRoleMap($letter)
     {
-        $isCommitteeLetter = $letter->category->committee_id !== null;
-
-        if ($isCommitteeLetter) {
-            $roleMap = [
-                1 => 5, // Sekretaris Panitia
-                2 => 4, // Ketua Panitia
-                3 => 2, // Ketua Umum
-                4 => 6, // Pembina
-            ];
-        } else {
-            $roleMap = [
-                1 => 3, // Sekretaris Umum
-                2 => 2, // Ketua Umum
-                3 => 6, // Pembina
-            ];
-        }
-
-        return $roleMap[$order] ?? null;
+        return $letter->category->committee_id !== null
+            ? self::COMMITTEE_ROLE_MAP
+            : self::GENERAL_ROLE_MAP;
     }
 }

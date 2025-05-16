@@ -50,6 +50,8 @@ class SuratPengurusController extends SekretarisUmumController
                 'file_path' => 'required|file|mimes:pdf|max:10240',
                 'category_id' => 'required|exists:letter_categories,id',
                 'date' => 'required|date',
+                'sekretaris_umum_id' => 'nullable|exists:users,id',
+                'ketua_umum_id' => 'required|exists:users,id',
                 'pembina_id' => 'nullable|exists:users,id'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -103,13 +105,20 @@ class SuratPengurusController extends SekretarisUmumController
             $letter = Letter::create($letterData);
 
             // Create signature records in order
-            $signers = [
-                ['id' => $sekretarisUmum->id, 'order' => 1],
-                ['id' => $ketuaUmum->id, 'order' => 2]
-            ];
+            $signers = [];
+            $order = 1;
 
+            // Add Sekretaris Umum if selected
+            if ($request->sekretaris_umum_id) {
+                $signers[] = ['id' => $request->sekretaris_umum_id, 'order' => $order++];
+            }
+
+            // Add Ketua Umum (required)
+            $signers[] = ['id' => $request->ketua_umum_id, 'order' => $order++];
+
+            // Add Pembina if selected
             if ($request->pembina_id) {
-                $signers[] = ['id' => $request->pembina_id, 'order' => 3];
+                $signers[] = ['id' => $request->pembina_id, 'order' => $order++];
             }
 
             foreach ($signers as $signer) {

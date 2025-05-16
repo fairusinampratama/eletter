@@ -119,7 +119,36 @@
                                         @if(isset($column['type']) && $column['type'] === 'number')
                                         {{ ($data->currentPage() - 1) * $data->perPage() + $loop->parent->iteration }}
                                         @elseif(isset($column['type']) && $column['type'] === 'component')
+                                        @if($column['component'] === 'signing-status')
+                                        <div class="flex flex-col space-y-2">
+                                            @foreach($item->signatures()->with('signer.role')->orderBy('order')->get()
+                                            as $signature)
+                                            <div class="flex items-center space-x-2">
+                                                @if($signature->signed_at)
+                                                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                                @else
+                                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                @endif
+                                                <span class="text-sm">
+                                                    {{ $signature->signer->fullname }}
+                                                    <span class="text-xs text-gray-500">({{
+                                                        $signature->signer->role->name }})</span>
+                                                </span>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        @else
                                         <x-dynamic-component :component="$column['component']" :letter="$item" />
+                                        @endif
                                         @else
                                         {{ data_get($item, $column['field']) }}
                                         @endif

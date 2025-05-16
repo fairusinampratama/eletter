@@ -60,6 +60,9 @@ class SuratPanitiaController extends SekretarisPanitiaController
                 'file_path' => 'required|file|mimes:pdf|max:10240',
                 'category_id' => 'required|exists:letter_categories,id',
                 'date' => 'required|date',
+                'sekretaris_panitia_id' => 'nullable|exists:users,id',
+                'ketua_panitia_id' => 'required|exists:users,id',
+                'ketua_umum_id' => 'required|exists:users,id',
                 'pembina_id' => 'nullable|exists:users,id'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -124,33 +127,47 @@ class SuratPanitiaController extends SekretarisPanitiaController
             // Create letter record
             $letter = Letter::create($letterData);
 
-            // Determine if this is a committee letter or a general letter
-            $isCommitteeLetter = $category->committee_id !== null;
+            // Create signature records in order
             $signers = [];
-            if ($isCommitteeLetter) {
-                // Committee letter: Sekretaris Panitia, Ketua Panitia, Ketua Umum, Pembina (optional)
-                $signers[] = ['id' => $currentUser->id, 'order' => 1]; // Sekretaris Panitia
-                $signers[] = ['id' => $ketuaPanitia->id, 'order' => 2]; // Ketua Panitia
-                $signers[] = ['id' => $ketuaUmum->id, 'order' => 3]; // Ketua Umum
-                if ($request->pembina_id) {
-                    $signers[] = ['id' => $request->pembina_id, 'order' => 4]; // Pembina (optional)
-                }
-            } else {
-                // General letter: Sekretaris Umum, Ketua Umum, Pembina (optional)
-                $sekretarisUmum = User::where('institution_id', $userInstitutionId)
-                    ->where('role_id', 3) // Sekretaris Umum
-                    ->firstOrFail();
-                $signers[] = ['id' => $sekretarisUmum->id, 'order' => 1]; // Sekretaris Umum
-                $signers[] = ['id' => $ketuaUmum->id, 'order' => 2]; // Ketua Umum
-                if ($request->pembina_id) {
-                    $signers[] = ['id' => $request->pembina_id, 'order' => 3]; // Pembina (optional)
-                }
+            $order = 1;
+
+            // Add Sekretaris Panitia if selected
+            if ($request->sekretaris_panitia_id) {
+                $signers[] = [
+                    'id' => $request->sekretaris_panitia_id,
+                    'order' => $order++,
+                    'role' => 'Sekretaris Panitia'
+                ];
+            }
+
+            // Add Ketua Panitia (required)
+            $signers[] = [
+                'id' => $request->ketua_panitia_id,
+                'order' => $order++,
+                'role' => 'Ketua Panitia'
+            ];
+
+            // Add Ketua Umum (required)
+            $signers[] = [
+                'id' => $request->ketua_umum_id,
+                'order' => $order++,
+                'role' => 'Ketua Umum'
+            ];
+
+            // Add Pembina if selected
+            if ($request->pembina_id) {
+                $signers[] = [
+                    'id' => $request->pembina_id,
+                    'order' => $order++,
+                    'role' => 'Pembina'
+                ];
             }
 
             foreach ($signers as $signer) {
                 $letter->signatures()->create([
                     'signer_id' => $signer['id'],
                     'order' => $signer['order'],
+                    'role' => $signer['role'],
                     'signature' => null,
                     'public_key' => null,
                     'signed_at' => null
