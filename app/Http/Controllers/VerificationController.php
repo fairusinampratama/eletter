@@ -33,15 +33,6 @@ class VerificationController extends Controller
             // Hash uploaded file
             $uploadedHash = hash_file('sha256', $request->file('file')->path());
 
-            // Debug information
-            Log::info('Letter Verification Debug', [
-                'verification_id' => $verification_id,
-                'stored_hash' => $letter->file_hash,
-                'uploaded_hash' => $uploadedHash,
-                'stored_path' => storage_path('app/public/' . $letter->file_path),
-                'uploaded_path' => $request->file('file')->path()
-            ]);
-
             // Compare hashes
             if ($uploadedHash !== $letter->file_hash) {
                 return back()->with('error', sprintf(
@@ -55,10 +46,12 @@ class VerificationController extends Controller
             $valid = true;
             $invalidSignatures = [];
             $unsignedSignatures = [];
+            $signatureValidity = [];
 
             foreach ($letter->signatures as $signature) {
                 if (!$signature->signed_at || !$signature->signature) {
                     $unsignedSignatures[] = $signature->signer->fullname;
+                    $signatureValidity[$signature->id] = 'unsigned';
                     $valid = false;
                     continue;
                 }
@@ -73,6 +66,9 @@ class VerificationController extends Controller
                 ) {
                     $valid = false;
                     $invalidSignatures[] = $signature->signer->fullname;
+                    $signatureValidity[$signature->id] = 'invalid';
+                } else {
+                    $signatureValidity[$signature->id] = 'valid';
                 }
             }
 
@@ -80,7 +76,8 @@ class VerificationController extends Controller
                 'letter' => $letter,
                 'valid' => $valid,
                 'invalidSignatures' => $invalidSignatures,
-                'unsignedSignatures' => $unsignedSignatures
+                'unsignedSignatures' => $unsignedSignatures,
+                'signatureValidity' => $signatureValidity,
             ]);
         } catch (\Illuminate\Session\TokenMismatchException $e) {
             return back()->with('error', 'Your session has expired. Please refresh the page and try again.');
