@@ -61,11 +61,8 @@ class SignatureController extends Controller
         }
 
         try {
-            // Generate ECDSA key pair
-            $keyPair = $ecdsaService->generateKeyPair();
-
-            // Sign the letter's file hash
-            $signatureData = $ecdsaService->sign($letter->file_hash, $keyPair['privateKey']);
+            // Sign using user's private key
+            $signatureData = $ecdsaService->sign($letter->file_hash, $currentUser->private_key);
 
             // If signature record does not exist, create it with proper order
             if (!$signature) {
@@ -79,7 +76,6 @@ class SignatureController extends Controller
             // Update the signature record
             $signature->update([
                 'signature' => $signatureData,
-                'public_key' => $keyPair['publicKey'],
                 'signed_at' => now(),
             ]);
 

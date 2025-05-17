@@ -126,7 +126,6 @@ class SuratPengurusController extends SekretarisUmumController
                     'signer_id' => $signer['id'],
                     'order' => $signer['order'],
                     'signature' => null,
-                    'public_key' => null,
                     'signed_at' => null
                 ]);
             }

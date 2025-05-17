@@ -16,7 +16,6 @@ return new class extends Migration {
             $table->foreignId('signer_id')->constrained('users')->onDelete('cascade');
             $table->integer('order');
             $table->string('signature')->nullable();
-            $table->string('public_key')->nullable();
             $table->string('signed_at')->nullable();
             $table->timestamps();
         });

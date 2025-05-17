@@ -17,6 +17,8 @@ return new class extends Migration {
             $table->string('fullname');
             $table->foreignId('role_id')->constrained('roles')->cascadeOnDelete();
             $table->foreignId('institution_id')->constrained('institutions')->cascadeOnDelete();
+            $table->string('public_key')->nullable();
+            $table->string('private_key')->nullable();
             $table->timestamps();
         });
     }

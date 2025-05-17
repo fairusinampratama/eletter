@@ -63,11 +63,12 @@ class VerificationController extends Controller
                     continue;
                 }
 
+                // Get the signer's public key from their user record
                 if (
                     !$ecdsaService->verify(
                         $letter->file_hash,
                         $signature->signature,
-                        $signature->public_key
+                        $signature->signer->public_key
                     )
                 ) {
                     $valid = false;

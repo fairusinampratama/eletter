@@ -17,7 +17,9 @@ class User extends Authenticatable
         'fullname',
         'email',
         'role_id',
-        'institution_id'
+        'institution_id',
+        'public_key',
+        'private_key',
     ];
 
     protected $hidden = [
@@ -67,6 +69,15 @@ class User extends Authenticatable
     public function isCommitteeSecretary(): bool
     {
         return $this->committeesAsSecretary()->exists();
+    }
+
+    public function generateKeyPair(ECDSAService $ecdsaService)
+    {
+        $keyPair = $ecdsaService->generateKeyPair();
+        $this->update([
+            'public_key' => $keyPair['publicKey'],
+            'private_key' => $keyPair['privateKey']
+        ]);
     }
 
     public function scopeForInstitution($query)
@@ -139,5 +150,24 @@ class User extends Authenticatable
         }
 
         return $query;
+    }
+
+    public function hasKeyPair(): bool
+    {
+        return !empty($this->public_key) && !empty($this->private_key);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if (empty($user->public_key) || empty($user->private_key)) {
+                $ecdsaService = app(ECDSAService::class);
+                $keyPair = $ecdsaService->generateKeyPair();
+                $user->public_key = $keyPair['publicKey'];
+                $user->private_key = $keyPair['privateKey'];
+            }
+        });
     }
 }

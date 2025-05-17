@@ -16,7 +16,6 @@ class Signature extends Model
         'signer_id',
         'order',
         'signature',
-        'public_key',
         'signed_at',
     ];
 

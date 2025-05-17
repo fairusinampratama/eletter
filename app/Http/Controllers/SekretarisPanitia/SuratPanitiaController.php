@@ -169,7 +169,6 @@ class SuratPanitiaController extends SekretarisPanitiaController
                     'order' => $signer['order'],
                     'role' => $signer['role'],
                     'signature' => null,
-                    'public_key' => null,
                     'signed_at' => null
                 ]);
             }
