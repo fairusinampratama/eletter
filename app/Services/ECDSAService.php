@@ -114,9 +114,9 @@ class ECDSAService
      * @param string $message
      * @param string $signature
      * @param string $publicKey
-     * @return bool
+     * @return array{valid: bool, reason: string|null}
      */
-    public function verify(string $message, string $signature, string $publicKey): bool
+    public function verify(string $message, string $signature, string $publicKey): array
     {
         try {
             // Create key pair from public key
@@ -135,11 +135,17 @@ class ECDSAService
                 's' => $s
             ];
 
-            // Verify the signature
-            return $keyPair->verify($messageHash, $sig);
+            $isValid = $keyPair->verify($messageHash, $sig);
+
+            return [
+                'valid' => $isValid,
+                'reason' => $isValid ? null : 'The document hash does not match the signed version'
+            ];
         } catch (Exception $e) {
-            Log::error('Error verifying signature: ' . $e->getMessage());
-            return false;
+            return [
+                'valid' => false,
+                'reason' => 'Error during verification: ' . $e->getMessage()
+            ];
         }
     }
 

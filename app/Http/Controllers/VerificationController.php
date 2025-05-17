@@ -47,6 +47,7 @@ class VerificationController extends Controller
             $invalidSignatures = [];
             $unsignedSignatures = [];
             $signatureValidity = [];
+            $signatureReasons = [];
 
             foreach ($letter->signatures as $signature) {
                 if (!$signature->signed_at || !$signature->signature) {
@@ -56,17 +57,18 @@ class VerificationController extends Controller
                     continue;
                 }
 
-                // Get the signer's public key from their user record
-                if (
-                    !$ecdsaService->verify(
-                        $letter->file_hash,
-                        $signature->signature,
-                        $signature->signer->public_key
-                    )
-                ) {
+                // Use original_file_hash for signature verification
+                $verificationResult = $ecdsaService->verify(
+                    $letter->original_file_hash,
+                    $signature->signature,
+                    $signature->signer->public_key
+                );
+
+                if (!$verificationResult['valid']) {
                     $valid = false;
                     $invalidSignatures[] = $signature->signer->fullname;
                     $signatureValidity[$signature->id] = 'invalid';
+                    $signatureReasons[$signature->id] = $verificationResult['reason'];
                 } else {
                     $signatureValidity[$signature->id] = 'valid';
                 }
@@ -78,6 +80,7 @@ class VerificationController extends Controller
                 'invalidSignatures' => $invalidSignatures,
                 'unsignedSignatures' => $unsignedSignatures,
                 'signatureValidity' => $signatureValidity,
+                'signatureReasons' => $signatureReasons,
             ]);
         } catch (\Illuminate\Session\TokenMismatchException $e) {
             return back()->with('error', 'Your session has expired. Please refresh the page and try again.');

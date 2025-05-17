@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->date('date');
             $table->string('file_path');
             $table->string('file_hash');
+            $table->string('original_file_hash')->nullable();
             $table->enum('status', ['pending', 'signed', 'rejected'])->default('pending');
             $table->timestamps();
         });

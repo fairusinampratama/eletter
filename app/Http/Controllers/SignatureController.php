@@ -6,6 +6,7 @@ use App\Models\Letter;
 use App\Services\ECDSAService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\PDFService;
 
 class SignatureController extends Controller
 {
@@ -79,10 +80,24 @@ class SignatureController extends Controller
                 'signed_at' => now(),
             ]);
 
-            // If all signatures are collected, update letter status
+            // Check if this was the last signature needed
             $allSigned = $letter->signatures()->whereNull('signed_at')->count() === 0;
             if ($allSigned) {
-                $letter->update(['status' => 'signed']);
+                // Add QR code to PDF and update hash
+                $pdfService = app(PDFService::class);
+                $signedPath = $pdfService->embedQRCode($letter);
+
+                if ($signedPath) {
+                    // Update letter with new file path and hash, preserve original_file_hash
+                    $letter->update([
+                        'file_path' => $signedPath,
+                        'file_hash' => hash_file('sha256', storage_path('app/public/' . $signedPath)),
+                        'status' => 'signed',
+                        'original_file_hash' => $letter->original_file_hash,
+                    ]);
+                } else {
+                    $letter->update(['status' => 'signed']);
+                }
             }
 
             return back()->with('success', 'Surat berhasil ditandatangani.');

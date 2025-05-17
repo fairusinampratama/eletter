@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Services\ECDSAService;
 
 class User extends Authenticatable
 {
@@ -71,8 +72,9 @@ class User extends Authenticatable
         return $this->committeesAsSecretary()->exists();
     }
 
-    public function generateKeyPair(ECDSAService $ecdsaService)
+    public function generateKeyPair()
     {
+        $ecdsaService = new ECDSAService();
         $keyPair = $ecdsaService->generateKeyPair();
         $this->update([
             'public_key' => $keyPair['publicKey'],

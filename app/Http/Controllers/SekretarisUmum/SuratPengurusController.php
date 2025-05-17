@@ -87,7 +87,7 @@ class SuratPengurusController extends SekretarisUmumController
 
             // Store original PDF and calculate hash
             $path = $request->file('file_path')->store('documents', 'public');
-            $fileHash = hash_file('sha256', storage_path('app/public/' . $path));
+            $originalFileHash = hash_file('sha256', storage_path('app/public/' . $path));
 
             // Prepare letter data
             $letterData = [
@@ -96,7 +96,8 @@ class SuratPengurusController extends SekretarisUmumController
                 'category_id' => $request->category_id,
                 'creator_id' => $currentUser->id,
                 'file_path' => $path,
-                'file_hash' => $fileHash,
+                'file_hash' => $originalFileHash, // This will be updated after QR
+                'original_file_hash' => $originalFileHash, // Store original hash for signature
                 'date' => $request->date,
                 'status' => 'pending'
             ];
@@ -127,15 +128,6 @@ class SuratPengurusController extends SekretarisUmumController
                     'order' => $signer['order'],
                     'signature' => null,
                     'signed_at' => null
-                ]);
-            }
-
-            // Add QR code to PDF and update hash
-            $signedPath = $pdfService->embedQRCode($letter);
-            if ($signedPath) {
-                $letter->update([
-                    'file_path' => $signedPath,
-                    'file_hash' => hash_file('sha256', storage_path('app/public/' . $signedPath))
                 ]);
             }
 

@@ -16,7 +16,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::middleware([RoleMiddleware::class . ':1'])->group(function () {
         Route::prefix('admin-kemahasiswaan')->name('admin-kemahasiswaan.')->group(function () {
             Route::get('/', function () {
-                return redirect()->route('admin-kemahasiswaan.ukm.index');
+                return redirect()->route('admin-kemahasiswaan.pengguna.index');
             })->name('dashboard');
 
             Route::resource('pengguna', \App\Http\Controllers\AdminKemahasiswaan\PenggunaController::class);

@@ -18,6 +18,7 @@ class Letter extends Model
         'creator_id',
         'file_path',
         'file_hash',
+        'original_file_hash',
         'date',
         'status',
     ];
