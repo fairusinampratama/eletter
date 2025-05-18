@@ -26,5 +26,7 @@ Route::get('/', function () {
 // Verification Routes
 Route::get('/verify/{verification_id}', [VerificationController::class, 'show'])->name('verify');
 Route::post('/verify/{verification_id}', [VerificationController::class, 'verify'])->name('verify.check');
+Route::get('/verify/{verification_id}/{signature}', [VerificationController::class, 'showSignature'])->name('verify.signature');
+Route::post('/verify/{verification_id}/{signature}', [VerificationController::class, 'verifySignature'])->name('verify.signature.check');
 
 require __DIR__ . '/auth.php';

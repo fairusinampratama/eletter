@@ -42,6 +42,26 @@ class SuratPengurusController extends SekretarisUmumController
         ]);
     }
 
+    public function create()
+    {
+        $userInstitutionId = auth()->user()->institution_id;
+
+        // Get letter categories for this institution
+        $categories = LetterCategory::nonCommittee()
+            ->where('institution_id', $userInstitutionId)
+            ->get();
+
+        // Get users from the same institution for signer selection
+        $users = User::where('institution_id', $userInstitutionId)->get();
+
+        return view('dashboard.sekretaris-umum.surat-pengurus.create', [
+            'menuItems' => $this->menuItems,
+            'title' => 'Tambah ' . $this->title,
+            'categories' => $categories,
+            'users' => $users,
+        ]);
+    }
+
     public function store(Request $request, PDFService $pdfService)
     {
         try {
@@ -50,9 +70,12 @@ class SuratPengurusController extends SekretarisUmumController
                 'file_path' => 'required|file|mimes:pdf|max:10240',
                 'category_id' => 'required|exists:letter_categories,id',
                 'date' => 'required|date',
-                'sekretaris_umum_id' => 'nullable|exists:users,id',
-                'ketua_umum_id' => 'required|exists:users,id',
-                'pembina_id' => 'nullable|exists:users,id'
+                'signers' => 'required|array|min:1',
+                'signers.*.id' => 'required|exists:users,id',
+                'signers.*.order' => 'required|integer',
+                'signers.*.qr_page' => 'required|integer',
+                'signers.*.qr_x' => 'required|numeric',
+                'signers.*.qr_y' => 'required|numeric',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
@@ -62,28 +85,8 @@ class SuratPengurusController extends SekretarisUmumController
         }
 
         try {
-            // Get the institution's users
             $userInstitutionId = auth()->user()->institution_id;
             $currentUser = auth()->user();
-
-            // Get default Sekretaris Umum and Ketua Umum for the institution
-            $sekretarisUmum = User::where('institution_id', $userInstitutionId)
-                ->where('role_id', 3) // Role ID for Sekretaris Umum
-                ->firstOrFail();
-
-            $ketuaUmum = User::where('institution_id', $userInstitutionId)
-                ->where('role_id', 2) // Role ID for Ketua Umum
-                ->firstOrFail();
-
-            // Validate Pembina if selected
-            if ($request->pembina_id) {
-                $pembina = User::findOrFail($request->pembina_id);
-                if ($pembina->institution_id !== $userInstitutionId || $pembina->role_id !== 6) {
-                    throw ValidationException::withMessages([
-                        'pembina_id' => 'Invalid Pembina selected'
-                    ]);
-                }
-            }
 
             // Store original PDF and calculate hash
             $path = $request->file('file_path')->store('documents', 'public');
@@ -96,8 +99,8 @@ class SuratPengurusController extends SekretarisUmumController
                 'category_id' => $request->category_id,
                 'creator_id' => $currentUser->id,
                 'file_path' => $path,
-                'file_hash' => $originalFileHash, // This will be updated after QR
-                'original_file_hash' => $originalFileHash, // Store original hash for signature
+                'file_hash' => $originalFileHash,
+                'original_file_hash' => $originalFileHash,
                 'date' => $request->date,
                 'status' => 'pending'
             ];
@@ -105,35 +108,24 @@ class SuratPengurusController extends SekretarisUmumController
             // Create letter record
             $letter = Letter::create($letterData);
 
-            // Create signature records in order
-            $signers = [];
-            $order = 1;
-
-            // Add Sekretaris Umum if selected
-            if ($request->sekretaris_umum_id) {
-                $signers[] = ['id' => $request->sekretaris_umum_id, 'order' => $order++];
-            }
-
-            // Add Ketua Umum (required)
-            $signers[] = ['id' => $request->ketua_umum_id, 'order' => $order++];
-
-            // Add Pembina if selected
-            if ($request->pembina_id) {
-                $signers[] = ['id' => $request->pembina_id, 'order' => $order++];
-            }
-
-            foreach ($signers as $signer) {
+            // Create signature records from signers[]
+            foreach ($request->signers as $signer) {
                 $letter->signatures()->create([
                     'signer_id' => $signer['id'],
                     'order' => $signer['order'],
                     'signature' => null,
-                    'signed_at' => null
+                    'signed_at' => null,
+                    'qr_metadata' => [
+                        'page' => (int) $signer['qr_page'],
+                        'x' => (float) $signer['qr_x'],
+                        'y' => (float) $signer['qr_y'],
+                    ],
                 ]);
             }
 
             return redirect()->route('sekretaris-umum.surat-pengurus.index')
                 ->with('success', 'Surat pengurus berhasil ditambahkan.');
-        } catch (ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();

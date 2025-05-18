@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Http\Controllers\SignatureController;
 
 class Table extends Component
 {
@@ -184,43 +185,28 @@ class Table extends Component
     {
         $availableActions = [];
         $currentUser = auth()->user();
+        $signatureController = app(SignatureController::class);
 
         foreach ($items as $item) {
             $itemActions = [];
             foreach ($this->actions as $action) {
-                // if ($action['type'] === 'view' && !$item->isFullySigned()) {
-                //     continue;
-                // }
-
                 if ($action['type'] === 'confirm') {
                     // Skip if user has already signed
                     if ($item->hasUserSigned($currentUser->id)) {
                         continue;
                     }
 
-                    // Get the user's signature order
-                    $userSignature = $item->signatures()
-                        ->where('signer_id', $currentUser->id)
-                        ->first();
-
-                    if (!$userSignature) {
+                    // Check if user is authorized to sign
+                    if (!$signatureController->isAuthorizedToSign($item, $currentUser)) {
                         continue;
                     }
 
-                    // Check if all previous signers have signed
-                    $previousSignatures = $item->signatures()
-                        ->where('order', '<', $userSignature->order)
-                        ->whereNotNull('signed_at')
-                        ->count();
-
-                    $requiredPreviousSignatures = $userSignature->order - 1;
-
-                    if ($previousSignatures < $requiredPreviousSignatures) {
-                        continue;
-                    }
+                    // Add the confirm action
+                    $itemActions[] = $action;
+                } else {
+                    // Add other actions without checking
+                    $itemActions[] = $action;
                 }
-
-                $itemActions[] = $action;
             }
             $availableActions[$item->id] = $itemActions;
         }

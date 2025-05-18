@@ -17,6 +17,11 @@ class Signature extends Model
         'order',
         'signature',
         'signed_at',
+        'qr_metadata',
+    ];
+
+    protected $casts = [
+        'qr_metadata' => 'array',
     ];
 
     public function letter()

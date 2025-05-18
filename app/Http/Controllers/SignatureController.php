@@ -83,9 +83,9 @@ class SignatureController extends Controller
             // Check if this was the last signature needed
             $allSigned = $letter->signatures()->whereNull('signed_at')->count() === 0;
             if ($allSigned) {
-                // Add QR code to PDF and update hash
+                // Add all QR codes to PDF and update hash
                 $pdfService = app(PDFService::class);
-                $signedPath = $pdfService->embedQRCode($letter);
+                $signedPath = $pdfService->embedQRCodes($letter);
 
                 if ($signedPath) {
                     // Update letter with new file path and hash, preserve original_file_hash
@@ -118,28 +118,55 @@ class SignatureController extends Controller
         return $roleMap['order_to_role'][$order] ?? null;
     }
 
-    protected function isAuthorizedToSign(Letter $letter, $user)
+    public function isAuthorizedToSign(Letter $letter, $user)
     {
         // Check if user is in the same institution
         if ($user->institution_id !== $letter->category->institution_id) {
             return false;
         }
 
-        // Find user's signature record
-        $signature = $letter->signatures()->where('signer_id', $user->id)->first();
-        if (!$signature) {
+        // Get the role map for this letter type
+        $roleMap = $this->getRoleMap($letter);
+
+        // Get the order for this user's role
+        $order = $roleMap['role_to_order'][$user->role_id] ?? null;
+
+        // If no order found, user is not authorized
+        if (!$order) {
             return false;
         }
 
-        // Check if all previous signers have signed
-        $previousSignatures = $letter->signatures()
-            ->where('order', '<', $signature->order)
-            ->whereNotNull('signed_at')
-            ->count();
+        // Find user's signature record
+        $signature = $letter->signatures()->where('signer_id', $user->id)->first();
 
-        $requiredPreviousSignatures = $signature->order - 1;
+        // If no signature record exists and user is first signer, create it
+        if (!$signature && $order === 1) {
+            $signature = $letter->signatures()->create([
+                'signer_id' => $user->id,
+                'order' => $order,
+            ]);
+            return true;
+        }
 
-        return $previousSignatures >= $requiredPreviousSignatures;
+        // If signature exists but not signed
+        if ($signature && !$signature->signed_at) {
+            // If order is 1, no previous signatures are required
+            if ($signature->order === 1) {
+                return true;
+            }
+
+            // Check if all previous signers have signed
+            $previousSignatures = $letter->signatures()
+                ->where('order', '<', $signature->order)
+                ->whereNotNull('signed_at')
+                ->count();
+
+            $requiredPreviousSignatures = $signature->order - 1;
+
+            return $previousSignatures >= $requiredPreviousSignatures;
+        }
+
+        return false;
     }
 
     private function getRoleMap($letter)

@@ -45,64 +45,96 @@ class PDFService
     }
 
     /**
-     * Embed QR code in PDF
+     * Embed QR codes in PDF
      *
-     * @param Letter $document
+     * @param Letter $letter
      * @return string
      */
-    public function embedQRCode(Letter $document): string
+    public function embedQRCodes(Letter $letter): string
     {
-        // Ensure storage directories exist
         Storage::disk('public')->makeDirectory('documents');
         Storage::disk('public')->makeDirectory('qr_codes');
 
-        // Generate QR code
-        $qrCode = new EndroidQrCode(route('verify', $document->verification_id));
-        $qrCode->setSize(300);
-        $qrCode->setMargin(10);
+        $originalPdfPath = Storage::disk('public')->path($letter->file_path);
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pageQRCodes = [];
 
-        // Create writer
-        $writer = new PngWriter();
-        $result = $writer->write($qrCode);
+        // Prepare QR codes for each signature
+        foreach ($letter->signatures as $signature) {
+            $meta = $signature->qr_metadata;
+            if (is_string($meta)) {
+                $meta = json_decode($meta, true);
+            }
+            if (!is_array($meta) || !isset($meta['page'], $meta['x'], $meta['y'])) {
+                continue; // skip if metadata is missing
+            }
 
-        // Save QR code temporarily
-        $qrPath = 'qr_codes/' . $document->verification_id . '.png';
-        Storage::disk('public')->put($qrPath, $result->getString());
+            // Generate QR code content
+            $qrContent = url("verify/{$letter->verification_id}/{$signature->signature}");
+            $qrCode = new \Endroid\QrCode\QrCode($qrContent);
+            $qrCode->setSize(300);
+            $qrCode->setMargin(10);
 
-        // Get the original PDF path
-        $originalPdfPath = Storage::disk('public')->path($document->file_path);
+            $writer = new \Endroid\QrCode\Writer\PngWriter();
+            $result = $writer->write($qrCode);
 
-        // Create new PDF with QR code
-        $pdf = new Fpdi();
+            $qrPath = 'qr_codes/' . $letter->verification_id . '_' . $signature->id . '.png';
+            Storage::disk('public')->put($qrPath, $result->getString());
+
+            // Group QR codes by page
+            $pageQRCodes[$meta['page']][] = [
+                'path' => $qrPath,
+                'x' => $meta['x'],
+                'y' => $meta['y'],
+                'width' => 20,  // fixed size in mm
+                'height' => 20, // fixed size in mm
+            ];
+        }
 
         try {
-            // Get the number of pages in the original PDF
             $pageCount = $pdf->setSourceFile($originalPdfPath);
 
-            // Process each page
             for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                // Import page
                 $templateId = $pdf->importPage($pageNo);
                 $pdf->AddPage();
                 $pdf->useTemplate($templateId);
 
-                // Add QR code to the last page
-                if ($pageNo === $pageCount) {
-                    $this->addQRCodeToPage($pdf, $qrPath);
+                // Get page size in mm
+                $pageWidthMm = $pdf->GetPageWidth();
+                $pageHeightMm = $pdf->GetPageHeight();
+                // Default A4 size in points (pixels at 72dpi)
+                $pageWidthPx = 595;
+                $pageHeightPx = 842;
+
+                // Place all QR codes for this page
+                if (isset($pageQRCodes[$pageNo])) {
+                    foreach ($pageQRCodes[$pageNo] as $qr) {
+                        // Convert pixel to mm and adjust for center positioning
+                        $xMm = ($qr['x'] / $pageWidthPx * $pageWidthMm) - ($qr['width'] / 2);
+                        $yMm = ($qr['y'] / $pageHeightPx * $pageHeightMm) - ($qr['height'] / 2);
+                        $this->addQRCodeToPage($pdf, $qr['path'], $xMm, $yMm, $qr['width'], $qr['height']);
+                    }
                 }
             }
 
-            // Save the modified PDF
-            $modifiedPdfPath = 'documents/' . $document->verification_id . '_signed.pdf';
+            $modifiedPdfPath = 'documents/' . $letter->verification_id . '_signed.pdf';
             $pdf->Output(Storage::disk('public')->path($modifiedPdfPath), 'F');
 
-            // Clean up temporary QR code
-            Storage::disk('public')->delete($qrPath);
+            // Clean up QR images
+            foreach ($pageQRCodes as $qrs) {
+                foreach ($qrs as $qr) {
+                    Storage::disk('public')->delete($qr['path']);
+                }
+            }
 
             return $modifiedPdfPath;
         } catch (\Exception $e) {
             // Clean up on error
-            Storage::disk('public')->delete($qrPath);
+            foreach ($pageQRCodes as $qrs) {
+                foreach ($qrs as $qr) {
+                    Storage::disk('public')->delete($qr['path']);
+                }
+            }
             throw $e;
         }
     }
@@ -112,38 +144,17 @@ class PDFService
      *
      * @param Fpdi $pdf
      * @param string $qrPath
+     * @param float $x
+     * @param float $y
+     * @param float $width
+     * @param float $height
      * @return void
      */
-    private function addQRCodeToPage(Fpdi $pdf, string $qrPath): void
+    private function addQRCodeToPage(Fpdi $pdf, string $qrPath, float $x, float $y, float $width, float $height): void
     {
-        // Get page dimensions
-        $pageWidth = $pdf->GetPageWidth();
-        $pageHeight = $pdf->GetPageHeight();
-
-        // QR code dimensions
-        $qrWidth = 25; // mm
-        $qrHeight = 25; // mm
-
-        // Position QR code in bottom left corner with margin
-        $margin = 10; // mm
-        $x = $margin;
-        $y = $pageHeight - $qrHeight - $margin;
-
-        // Add QR code image
-        $pdf->Image(Storage::disk('public')->path($qrPath), $x, $y, $qrWidth, $qrHeight);
-
-        // Calculate where the text would go
-        $textY = $y + $qrHeight + 4; // 4mm below QR code
-
-        // If the text would go out of the page, put it above the QR code instead
-        if ($textY + 4 > $pageHeight - $margin) {
-            $textY = $y - 6; // 6mm above the QR code
-        }
-
-        // Add verification text
-        $pdf->SetFont('Helvetica', '', 7);
-        $pdf->SetXY($x, $textY);
-        $pdf->Cell($qrWidth, 4, 'Scan to verify document', 0, 1, 'C');
+        $pdf->Image(Storage::disk('public')->path($qrPath), $x, $y, $width, $height);
+        // Optionally add text below QR
+        $pdf->SetXY($x, $y + $height + 2);
     }
 
     /**

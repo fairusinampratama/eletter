@@ -8,9 +8,9 @@
                 class="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
                     <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Verify Document</h1>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Upload your PDF document to verify its
-                            authenticity</p>
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Verify Signature</h1>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Upload your PDF document to verify this
+                            specific signature</p>
                     </div>
                     <button id="theme-toggle" type="button"
                         class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
@@ -44,8 +44,81 @@
                     </div>
                 </div>
 
-                <form action="{{ route('verify.check', $verification_id) }}" method="POST" enctype="multipart/form-data"
-                    class="space-y-4 sm:space-y-6">
+                @if(isset($signature) && isset($signer))
+                <div class="mb-6 sm:mb-8">
+                    <div
+                        class="p-3 sm:p-4 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                        <h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">Signature
+                            Details</h2>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Signer</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{ $signer->fullname }}</p>
+                                <div class="mt-1 flex flex-wrap items-center gap-x-2 text-xs">
+                                    <span class="text-gray-500 dark:text-gray-400">{{ $signer->role->name }}</span>
+                                    @if($signer->institution)
+                                    <span class="text-gray-400 dark:text-gray-500">•</span>
+                                    <span class="text-gray-500 dark:text-gray-400">{{ $signer->institution->name
+                                        }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Signature Hash</p>
+                                <div class="mt-1 flex items-center gap-2">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="relative">
+                                            <div
+                                                class="flex items-center p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-center gap-2">
+                                                        <div
+                                                            class="w-8 h-8 bg-primary-600 rounded flex items-center justify-center">
+                                                            <svg class="w-4 h-4 text-white" aria-hidden="true"
+                                                                xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                viewBox="0 0 20 20">
+                                                                <path stroke="currentColor" stroke-linecap="round"
+                                                                    stroke-linejoin="round" stroke-width="2"
+                                                                    d="M7.5 3.5h6A1.5 1.5 0 0 1 15 5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 6 11V5a1.5 1.5 0 0 1 1.5-1.5Z" />
+                                                                <path stroke="currentColor" stroke-linecap="round"
+                                                                    stroke-linejoin="round" stroke-width="2"
+                                                                    d="M4.5 6.5h6A1.5 1.5 0 0 1 12 8v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 3 14V8a1.5 1.5 0 0 1 1.5-1.5Z" />
+                                                            </svg>
+                                                        </div>
+                                                        <p class="font-mono text-xs sm:text-sm text-gray-900 dark:text-white truncate"
+                                                            title="{{ $signature }}">
+                                                            {{ substr($signature, 0, 16) }}...{{ substr($signature, -16)
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button type="button"
+                                                    onclick="navigator.clipboard.writeText('{{ $signature }}').then(() => { this.querySelector('span').textContent = 'Copied!'; setTimeout(() => { this.querySelector('span').textContent = 'Copy'; }, 2000); })"
+                                                    class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                                    <svg class="w-3 h-3 mr-1.5" aria-hidden="true"
+                                                        xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 20 20">
+                                                        <path stroke="currentColor" stroke-linecap="round"
+                                                            stroke-linejoin="round" stroke-width="2"
+                                                            d="M7.5 3.5h6A1.5 1.5 0 0 1 15 5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 6 11V5a1.5 1.5 0 0 1 1.5-1.5Z" />
+                                                        <path stroke="currentColor" stroke-linecap="round"
+                                                            stroke-linejoin="round" stroke-width="2"
+                                                            d="M4.5 6.5h6A1.5 1.5 0 0 1 12 8v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 3 14V8a1.5 1.5 0 0 1 1.5-1.5Z" />
+                                                    </svg>
+                                                    <span>Copy</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <form action="{{ route('verify.signature.check', [$verification_id, $signature]) }}" method="POST"
+                    enctype="multipart/form-data" class="space-y-4 sm:space-y-6">
                     @csrf
                     <div>
                         <label for="file" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Upload
@@ -92,7 +165,7 @@
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                     stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
-                            Verify Document
+                            Verify Signature
                         </button>
                     </div>
                 </form>
