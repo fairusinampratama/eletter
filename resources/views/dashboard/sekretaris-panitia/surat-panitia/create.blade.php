@@ -3,10 +3,11 @@
 @section('content')
 
 <x-dashboard.page-wrapper :title="$title"
-    :breadcrumbItems="[['label' => 'Surat Pengurus', 'url' => route('sekretaris-umum.surat-pengurus.index')], ['label' => 'Tambah Surat']]">
+    :breadcrumbItems="[['label' => 'Surat Panitia', 'url' => route('sekretaris-panitia.surat-panitia.index')], ['label' => 'Tambah Surat']]">
     <div x-data="qrPlacement({
-        sekretarisUmumId: {{ $users->where('role_id', 3)->first()->id ?? 'null' }},
-        ketuaUmumId: {{ $users->where('role_id', 2)->first()->id }},
+        sekretarisPanitiaId: {{ $sekretarisPanitia ? $sekretarisPanitia->id : 'null' }},
+        ketuaPanitiaId: {{ $ketuaPanitia ? $ketuaPanitia->id : 'null' }},
+        ketuaUmumId: {{ $users->where('role_id', 2)->first()->id ?? 'null' }},
         pembinaId: {{ $users->where('role_id', 6)->first()->id ?? 'null' }}
     })" x-init="$store.pdf.currentPage = 1" class="grid grid-cols-1 lg:grid-cols-2">
         <!-- Left: PDF Viewer -->
@@ -65,7 +66,7 @@
 
         <!-- Right Side: Form -->
         <div class="bg-white dark:bg-gray-800 p-4">
-            <form id="surat-form" action="{{ route('sekretaris-umum.surat-pengurus.store') }}" method="POST"
+            <form id="surat-form" action="{{ route('sekretaris-panitia.surat-panitia.store') }}" method="POST"
                 enctype="multipart/form-data" @submit.prevent="validateAndSubmit">
                 @csrf
                 <div class="grid grid-cols-6 gap-6">
@@ -158,7 +159,7 @@
                             <p class="text-sm text-gray-500 dark:text-gray-400">Pilih satu penandatangan, lalu tempatkan
                                 QR pada halaman yang diinginkan. Ulangi untuk semua penandatangan.</p>
                         </div>
-                        <div class="grid gap-2 mb-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                        <div class="grid gap-2 mb-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                             <template x-for="(signer, key) in signers" :key="key">
                                 <button type="button" :class="[
                                         activeSignerKey === key ? 'ring-2 ring-primary-600 bg-primary-50 dark:bg-primary-900' : 'bg-white dark:bg-gray-700',
@@ -186,7 +187,7 @@
 
                     <!-- Submit & Cancel Buttons -->
                     <div class="col-span-6 flex justify-end gap-2">
-                        <a href="{{ route('sekretaris-umum.surat-pengurus.index') }}"
+                        <a href="{{ route('sekretaris-panitia.surat-panitia.index') }}"
                             class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
                             Batal
                         </a>
@@ -202,7 +203,7 @@
 
     <!-- Confirmation Modal -->
     <x-modals.confirm-modal id="submit-surat-modal" title="Simpan Surat"
-        message="Apakah Anda yakin ingin menyimpan surat ini?" :route="route('sekretaris-umum.surat-pengurus.store')"
+        message="Apakah Anda yakin ingin menyimpan surat ini?" :route="route('sekretaris-panitia.surat-panitia.store')"
         confirmText="Ya, Simpan" cancelText="Batal" type="confirm">
         <button type="button" id="modal-confirm-btn">Ya, Simpan</button>
     </x-modals.confirm-modal>
@@ -228,9 +229,10 @@
     ];
 
     const signerStyles = {
-        ketua_umum:      { color: 'bg-blue-100',   border: 'border-blue-600',   text: 'text-blue-600',   label: 'KU' },
-        sekretaris_umum: { color: 'bg-green-100',  border: 'border-green-600',  text: 'text-green-600',  label: 'SU' },
-        pembina:         { color: 'bg-yellow-100', border: 'border-yellow-500', text: 'text-yellow-600', label: 'P' }
+        sekretaris_panitia: { color: 'bg-green-100',  border: 'border-green-600',  text: 'text-green-600',  label: 'SP' },
+        ketua_panitia:      { color: 'bg-indigo-100', border: 'border-indigo-600', text: 'text-indigo-600', label: 'KP' },
+        ketua_umum:         { color: 'bg-blue-100',   border: 'border-blue-600',   text: 'text-blue-600',   label: 'KU' },
+        pembina:            { color: 'bg-yellow-100', border: 'border-yellow-500', text: 'text-yellow-600', label: 'P' }
     };
 
     // Function to trigger file input click
@@ -382,17 +384,28 @@
         }
     });
 
-    function qrPlacement({sekretarisUmumId, ketuaUmumId, pembinaId}) {
+    function qrPlacement({sekretarisPanitiaId, ketuaPanitiaId, ketuaUmumId, pembinaId}) {
         return {
             pageNum: 1,
-            activeSignerKey: 'ketua_umum', // Default active signer
+            activeSignerKey: 'ketua_panitia', // Default active signer
             signers: {
-                sekretaris_umum: {
-                    id: sekretarisUmumId,
-                    label: 'SU',
-                    labelFull: 'Sekretaris Umum',
-                    fullname: @json($users->where('role_id', 3)->first()->fullname ?? '-'),
+                sekretaris_panitia: {
+                    id: sekretarisPanitiaId,
+                    label: 'SP',
+                    labelFull: 'Sekretaris Panitia',
+                    fullname: @json($sekretarisPanitia ? $sekretarisPanitia->fullname : '-'),
                     order: 1,
+                    qr_page: null,
+                    qr_x: null,
+                    qr_y: null,
+                    isPlaced: false
+                },
+                ketua_panitia: {
+                    id: ketuaPanitiaId,
+                    label: 'KP',
+                    labelFull: 'Ketua Panitia',
+                    fullname: @json($ketuaPanitia ? $ketuaPanitia->fullname : '-'),
+                    order: 2,
                     qr_page: null,
                     qr_x: null,
                     qr_y: null,
@@ -403,7 +416,7 @@
                     label: 'KU',
                     labelFull: 'Ketua Umum',
                     fullname: @json($users->where('role_id', 2)->first()->fullname ?? '-'),
-                    order: 2,
+                    order: 3,
                     qr_page: null,
                     qr_x: null,
                     qr_y: null,
@@ -414,7 +427,7 @@
                     label: 'P',
                     labelFull: 'Pembina',
                     fullname: @json($users->where('role_id', 6)->first()->fullname ?? '-'),
-                    order: 3,
+                    order: 4,
                     qr_page: null,
                     qr_x: null,
                     qr_y: null,
@@ -490,10 +503,18 @@
                     return;
                 }
 
-                // Only Ketua Umum is required, others are optional
-                const ketuaUmum = Object.values(this.signers).find(s => s.labelFull === 'Ketua Umum');
+                // Ketua Panitia and Ketua Umum are required
+                const ketuaPanitia = this.signers.ketua_panitia;
+                const ketuaUmum = this.signers.ketua_umum;
+                let missing = [];
+                if (!ketuaPanitia || !ketuaPanitia.isPlaced) {
+                    missing.push('QR untuk penandatangan Ketua Panitia wajib ditempatkan.');
+                }
                 if (!ketuaUmum || !ketuaUmum.isPlaced) {
-                    showCustomAlert('danger', 'Pastikan persyaratan berikut terpenuhi:', ['QR untuk penandatangan Ketua Umum wajib ditempatkan.']);
+                    missing.push('QR untuk penandatangan Ketua Umum wajib ditempatkan.');
+                }
+                if (missing.length) {
+                    showCustomAlert('danger', 'Pastikan persyaratan berikut terpenuhi:', missing);
                     return;
                 }
 
@@ -561,7 +582,7 @@
         const currentPage = Alpine.store('pdf').currentPage;
         markers.forEach(marker => {
             if (!marker.placed || marker.qr_page !== currentPage) return;
-            const style = signerStyles[marker.key] || signerStyles.ketua_umum;
+            const style = signerStyles[marker.key] || { color: 'bg-gray-100', border: 'border-gray-400', text: 'text-gray-600', label: marker.label || '' };
             const markerDiv = document.createElement('div');
             markerDiv.className = `marker-qr group absolute z-30 cursor-move bg-transparent ${style.border} border-2 rounded-lg shadow-lg flex items-center justify-center transition hover:scale-105`;
             markerDiv.style.position = 'absolute';

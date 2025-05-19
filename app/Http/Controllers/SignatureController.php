@@ -79,7 +79,6 @@ class SignatureController extends Controller
                 'signature' => $signatureData,
                 'signed_at' => now(),
             ]);
-
             // Check if this was the last signature needed
             $allSigned = $letter->signatures()->whereNull('signed_at')->count() === 0;
             if ($allSigned) {
@@ -135,18 +134,8 @@ class SignatureController extends Controller
         if (!$order) {
             return false;
         }
-
         // Find user's signature record
         $signature = $letter->signatures()->where('signer_id', $user->id)->first();
-
-        // If no signature record exists and user is first signer, create it
-        if (!$signature && $order === 1) {
-            $signature = $letter->signatures()->create([
-                'signer_id' => $user->id,
-                'order' => $order,
-            ]);
-            return true;
-        }
 
         // If signature exists but not signed
         if ($signature && !$signature->signed_at) {

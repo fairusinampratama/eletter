@@ -72,6 +72,16 @@ class User extends Authenticatable
         return $this->committeesAsSecretary()->exists();
     }
 
+    public function committeeAsChairman()
+    {
+        return $this->committeesAsChairman()->first();
+    }
+
+    public function committeeAsSecretary()
+    {
+        return $this->committeesAsSecretary()->first();
+    }
+
     public function generateKeyPair()
     {
         $ecdsaService = new ECDSAService();

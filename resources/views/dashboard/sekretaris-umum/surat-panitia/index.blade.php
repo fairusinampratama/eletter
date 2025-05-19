@@ -12,7 +12,7 @@
                 ['field' => 'creator.fullname', 'label' => 'Pembuat'],
                 ['field' => 'date', 'label' => 'Tanggal'],
                 ['field' => 'status', 'label' => 'Status'],
-                ['field' => 'signing_status', 'label' => 'Status Tanda Tangan', 'type' => 'component', 'component' => 'signing-status'],
+                ['field' => 'signing_status', 'label' => 'Status Tanda Tangan', 'type' => 'component', 'component' => 'signing-status', 'sortable' => false],
             ]" :actions="[
                 ['type' => 'confirm', 'label' => 'Tandatangani Surat'],
                 ['type' => 'view', 'label' => 'Lihat Surat'],

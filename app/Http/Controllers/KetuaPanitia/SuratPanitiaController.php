@@ -23,10 +23,15 @@ class SuratPanitiaController extends KetuaPanitiaController
         $currentUser = auth()->user();
         $userInstitutionId = $currentUser->institution_id;
 
-        // Get the committee where user is secretary
+        // Get the committee where user is chairman
         $committee = Committee::where('chairman_id', $currentUser->id)->first();
         if (!$committee) {
-            return redirect()->back()->with('error', 'Anda tidak terdaftar sebagai ketua panitia.');
+            // Prevent infinite redirect: only return back if not already on this page
+            if (url()->previous() !== url()->current()) {
+                return redirect()->back()->with('error', 'Anda tidak terdaftar sebagai ketua panitia.');
+            } else {
+                abort(403, 'Anda tidak terdaftar sebagai ketua panitia.');
+            }
         }
 
         // Get letters through category relationship for this committee

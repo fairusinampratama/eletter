@@ -64,6 +64,9 @@ class SuratPengurusController extends SekretarisUmumController
 
     public function store(Request $request, PDFService $pdfService)
     {
+        // Log the raw request data at the very start
+        \Log::info('Step 1: Raw request data', $request->all());
+
         try {
             $request->validate([
                 'code' => 'required|string|unique:letters,code',
@@ -77,7 +80,10 @@ class SuratPengurusController extends SekretarisUmumController
                 'signers.*.qr_x' => 'required|numeric',
                 'signers.*.qr_y' => 'required|numeric',
             ]);
+            // Log after validation
+            \Log::info('Step 2: Request data after validation', $request->all());
         } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Step 2: Validation failed', ['errors' => $e->errors()]);
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput()
@@ -87,6 +93,9 @@ class SuratPengurusController extends SekretarisUmumController
         try {
             $userInstitutionId = auth()->user()->institution_id;
             $currentUser = auth()->user();
+
+            // Log before file storage
+            \Log::info('Step 3: Before file storage', $request->all());
 
             // Store original PDF and calculate hash
             $path = $request->file('file_path')->store('documents', 'public');
@@ -105,14 +114,29 @@ class SuratPengurusController extends SekretarisUmumController
                 'status' => 'pending'
             ];
 
+            // Log before creating the letter
+            \Log::info('Step 4: Before creating letter', ['letterData' => $letterData]);
+
             // Create letter record
             $letter = Letter::create($letterData);
 
-            // Create signature records from signers[]
-            foreach ($request->signers as $signer) {
+            // Log before creating signatures
+            \Log::info('Step 5: Before creating signatures', ['signers' => $request->signers]);
+
+            // Sort signers by role order: Sekretaris Umum (3), Ketua Umum (2), Pembina (6)
+            $roleOrder = [3, 2, 6];
+            $signers = collect($request->signers)->sortBy(function($signer) use ($roleOrder) {
+                $roleId = \App\Models\User::find($signer['id'])->role_id;
+                $idx = array_search($roleId, $roleOrder);
+                return $idx === false ? 99 : $idx;
+            })->values();
+
+            // Assign order sequentially (1,2,3...)
+            foreach ($signers as $idx => $signer) {
+                \Log::info('Step 6: Creating signature', ['signer' => $signer]);
                 $letter->signatures()->create([
                     'signer_id' => $signer['id'],
-                    'order' => $signer['order'],
+                    'order' => $idx + 1,
                     'signature' => null,
                     'signed_at' => null,
                     'qr_metadata' => [
@@ -123,13 +147,18 @@ class SuratPengurusController extends SekretarisUmumController
                 ]);
             }
 
+            // Log after all signatures created
+            \Log::info('Step 7: All signatures created for letter', ['letter_id' => $letter->id]);
+
             return redirect()->route('sekretaris-umum.surat-pengurus.index')
                 ->with('success', 'Surat pengurus berhasil ditambahkan.');
         } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Step 8: Validation exception in processing', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();
         } catch (\Exception $e) {
+            \Log::error('Step 9: General exception', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->with('error', 'Gagal menambah surat pengurus: ' . $e->getMessage())
                 ->withInput();

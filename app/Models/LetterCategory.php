@@ -49,7 +49,23 @@ class LetterCategory extends Model
     // Only categories for a specific committee
     public function scopeCommitteeOnly($query)
     {
-        return $query->whereNotNull('committee_id');
-    }
+        $user = auth()->user();
 
+        // If user is Sekretaris Panitia or Ketua Panitia, restrict to their committee
+        if (in_array($user->role_id, [4, 5])) { // 4 = Ketua Panitia, 5 = Sekretaris Panitia
+            $committee = \App\Models\Committee::where(function($q) use ($user) {
+                $q->where('secretary_id', $user->id)
+                  ->orWhere('chairman_id', $user->id);
+            })->first();
+
+            if ($committee) {
+                $query->where('committee_id', $committee->id);
+            } else {
+                // No committee found, return no results
+                $query->whereNull('id');
+            }
+        }
+        // For other roles, do not restrict by committee_id (see all in institution)
+        // The global scope already restricts to institution_id
+    }
 }

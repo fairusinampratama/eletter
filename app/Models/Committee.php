@@ -46,14 +46,5 @@ class Committee extends Model
                 $query->where('institution_id', Auth::user()->institution_id);
             }
         });
-
-        static::created(function ($committee) {
-            // Create a letter category for this committee
-            LetterCategory::create([
-                'name' => 'Surat ' . $committee->name,
-                'institution_id' => $committee->institution_id,
-                'committee_id' => $committee->id
-            ]);
-        });
     }
 }

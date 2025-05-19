@@ -200,13 +200,9 @@ class Table extends Component
                     if (!$signatureController->isAuthorizedToSign($item, $currentUser)) {
                         continue;
                     }
-
-                    // Add the confirm action
-                    $itemActions[] = $action;
-                } else {
-                    // Add other actions without checking
-                    $itemActions[] = $action;
                 }
+
+                $itemActions[] = $action;
             }
             $availableActions[$item->id] = $itemActions;
         }

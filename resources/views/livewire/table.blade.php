@@ -74,8 +74,9 @@
                                 @foreach($columns as $column)
                                 <th scope="col"
                                     class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
-                                    <div class="flex items-center space-x-1 cursor-pointer group"
-                                        wire:click="sort('{{ $column['field'] }}')">
+                                    <div class="flex items-center space-x-1 group" @if(!isset($column['sortable']) ||
+                                        $column['sortable'] !==false) style="cursor:pointer"
+                                        wire:click="sort('{{ $column['field'] }}')" @else style="cursor:default" @endif>
                                         <span
                                             class="{{ $sortField === $column['field'] ? 'text-primary-600 dark:text-primary-400 font-semibold' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300' }}">{{
                                             $column['label'] }}</span>
