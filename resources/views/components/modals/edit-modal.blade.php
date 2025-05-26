@@ -60,11 +60,18 @@
                                 class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                 {{ isset($field['required']) && $field['required'] ? 'required' : '' }}
                                 x-model="item?.{{ $field['name'] }}">
-                                <option value="">Select {{ strtolower($field['label']) }}</option>
+                                <option value="">Pilih {{ strtolower($field['label']) }}</option>
                                 @foreach($field['options'] as $value => $label)
-                                <option value="{{ $value }}">{{ $label }}</option>
+                                <option value="{{ $value }}" :selected="item?.{{ $field['name'] }} == '{{ $value }}'">{{
+                                    $label }}</option>
                                 @endforeach
                             </select>
+                            @elseif($field['type'] === 'year')
+                            <input type="number" name="{{ $field['name'] }}" id="edit-{{ $field['name'] }}"
+                                class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                placeholder="{{ $field['placeholder'] ?? '' }}" min="2000" max="{{ date('Y') + 1 }}"
+                                x-model="item?.{{ $field['name'] }}" {{ isset($field['required']) && $field['required']
+                                ? 'required' : '' }}>
                             @else
                             <input type="{{ $field['type'] }}" name="{{ $field['name'] }}"
                                 id="edit-{{ $field['name'] }}"

@@ -5,9 +5,9 @@
 <x-dashboard.page-wrapper :title="$title"
     :breadcrumbItems="[['label' => 'Surat Pengurus', 'url' => route('sekretaris-umum.surat-pengurus.index')], ['label' => 'Tambah Surat']]">
     <div x-data="qrPlacement({
-        sekretarisUmumId: {{ $users->where('role_id', 3)->first()->id ?? 'null' }},
-        ketuaUmumId: {{ $users->where('role_id', 2)->first()->id }},
-        pembinaId: {{ $users->where('role_id', 6)->first()->id ?? 'null' }}
+        sekretarisUmumId: {{ $users->where('role_id', 3)->where('is_active', true)->first()->id ?? 'null' }},
+        ketuaUmumId: {{ $users->where('role_id', 2)->where('is_active', true)->first()->id ?? 'null' }},
+        pembinaId: {{ $users->where('role_id', 6)->where('is_active', true)->first()->id ?? 'null' }}
     })" x-init="$store.pdf.currentPage = 1" class="grid grid-cols-1 lg:grid-cols-2">
         <!-- Left: PDF Viewer -->
         <div
@@ -391,7 +391,7 @@
                     id: sekretarisUmumId,
                     label: 'SU',
                     labelFull: 'Sekretaris Umum',
-                    fullname: @json($users->where('role_id', 3)->first()->fullname ?? '-'),
+                    fullname: @json($users->where('role_id', 3)->where('is_active', true)->first()->fullname ?? '-'),
                     order: 1,
                     qr_page: null,
                     qr_x: null,
@@ -402,7 +402,7 @@
                     id: ketuaUmumId,
                     label: 'KU',
                     labelFull: 'Ketua Umum',
-                    fullname: @json($users->where('role_id', 2)->first()->fullname ?? '-'),
+                    fullname: @json($users->where('role_id', 2)->where('is_active', true)->first()->fullname ?? '-'),
                     order: 2,
                     qr_page: null,
                     qr_x: null,
@@ -413,7 +413,7 @@
                     id: pembinaId,
                     label: 'P',
                     labelFull: 'Pembina',
-                    fullname: @json($users->where('role_id', 6)->first()->fullname ?? '-'),
+                    fullname: @json($users->where('role_id', 6)->where('is_active', true)->first()->fullname ?? '-'),
                     order: 3,
                     qr_page: null,
                     qr_x: null,

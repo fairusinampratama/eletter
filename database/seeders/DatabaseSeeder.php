@@ -17,9 +17,9 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             InstitutionSeeder::class,
             UserSeeder::class,
+            // LetterCategorySeeder::class,
             // CommitteeSeeder::class,
             // LetterSeeder::class,
-            // LetterCategorySeeder::class,
             // SignatureSeeder::class,
         ]);
     }

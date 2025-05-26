@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Services\ECDSAService;
+use Illuminate\Validation\ValidationException;
 
 class User extends Authenticatable
 {
@@ -21,10 +22,16 @@ class User extends Authenticatable
         'institution_id',
         'public_key',
         'private_key',
+        'year',
+        'is_active',
     ];
 
     protected $hidden = [
         'password',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function role(): BelongsTo
@@ -101,7 +108,8 @@ class User extends Authenticatable
 
         // If user is from institution (Sekretaris Umum, Ketua Umum, Pembina)
         if (in_array($user->role_id, [2, 3, 6])) {
-            return $query->where('institution_id', $user->institution_id);
+            return $query->where('institution_id', $user->institution_id)
+                        ->where('is_active', true);
         }
 
         // If user is from committee (Sekretaris Panitia, Ketua Panitia)
@@ -121,19 +129,22 @@ class User extends Authenticatable
     public function scopeChairman($query, $institutionId)
     {
         return $query->where('role_id', 2)
-            ->where('institution_id', $institutionId);
+            ->where('institution_id', $institutionId)
+            ->where('is_active', true);
     }
 
     public function scopeSecretary($query, $institutionId)
     {
         return $query->where('role_id', 3)
-            ->where('institution_id', $institutionId);
+            ->where('institution_id', $institutionId)
+            ->where('is_active', true);
     }
 
     public function scopeMentor($query, $institutionId)
     {
         return $query->where('role_id', 6)
-            ->where('institution_id', $institutionId);
+            ->where('institution_id', $institutionId)
+            ->where('is_active', true);
     }
 
     public function getAuthIdentifierName()
@@ -179,6 +190,76 @@ class User extends Authenticatable
                 $keyPair = $ecdsaService->generateKeyPair();
                 $user->public_key = $keyPair['publicKey'];
                 $user->private_key = $keyPair['privateKey'];
+            }
+
+            // Validate unique active leaders
+            if ($user->is_active && in_array($user->role_id, [2, 3, 6])) {
+                $existingActive = static::where('institution_id', $user->institution_id)
+                    ->where('role_id', $user->role_id)
+                    ->where('is_active', true)
+                    ->where('year', $user->year)
+                    ->exists();
+
+                if ($existingActive) {
+                    $roleName = match($user->role_id) {
+                        2 => 'Ketua Umum',
+                        3 => 'Sekretaris Umum',
+                        6 => 'Pembina',
+                        default => 'Unknown'
+                    };
+                    throw ValidationException::withMessages([
+                        'role_id' => "Sudah ada $roleName aktif untuk institusi ini pada tahun {$user->year}"
+                    ]);
+                }
+            }
+        });
+
+        static::updating(function ($user) {
+            // Check if is_active is being changed to true
+            if ($user->isDirty('is_active') && $user->is_active) {
+                // For leadership roles (Ketua Umum, Sekretaris Umum, Pembina)
+                if (in_array($user->role_id, [2, 3, 6])) {
+                    $existingActive = static::where('institution_id', $user->institution_id)
+                        ->where('role_id', $user->role_id)
+                        ->where('is_active', true)
+                        ->where('year', $user->year)
+                        ->where('id', '!=', $user->id)
+                        ->exists();
+
+                    if ($existingActive) {
+                        $roleName = match($user->role_id) {
+                            2 => 'Ketua Umum',
+                            3 => 'Sekretaris Umum',
+                            6 => 'Pembina',
+                            default => 'Unknown'
+                        };
+                        throw ValidationException::withMessages([
+                            'is_active' => "Sudah ada $roleName aktif untuk institusi ini pada tahun {$user->year}"
+                        ]);
+                    }
+                }
+            }
+
+            // Check if role is being changed for an active user
+            if ($user->isDirty('role_id') && $user->is_active && in_array($user->role_id, [2, 3, 6])) {
+                $existingActive = static::where('institution_id', $user->institution_id)
+                    ->where('role_id', $user->role_id)
+                    ->where('is_active', true)
+                    ->where('year', $user->year)
+                    ->where('id', '!=', $user->id)
+                    ->exists();
+
+                if ($existingActive) {
+                    $roleName = match($user->role_id) {
+                        2 => 'Ketua Umum',
+                        3 => 'Sekretaris Umum',
+                        6 => 'Pembina',
+                        default => 'Unknown'
+                    };
+                    throw ValidationException::withMessages([
+                        'role_id' => "Sudah ada $roleName aktif untuk institusi ini pada tahun {$user->year}"
+                    ]);
+                }
             }
         });
     }

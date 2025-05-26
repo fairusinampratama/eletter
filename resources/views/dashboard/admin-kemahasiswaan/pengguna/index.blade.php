@@ -7,10 +7,12 @@
     :filterRoute="'admin-kemahasiswaan.pengguna.index'" :filterPlaceholder="'Cari pengguna...'" :showAddButton="true"
     :addButtonText="'Tambah Pengguna'" :addButtonId="'add-user-modal'">
     <livewire:table :model="App\Models\User::class" :routePrefix="'admin-kemahasiswaan.pengguna'" :columns="[
-                ['field' => 'username', 'label' => 'Nama Pengguna'],
+                ['field' => 'username', 'label' => 'Username'],
                 ['field' => 'fullname', 'label' => 'Nama Lengkap'],
                 ['field' => 'role.name', 'label' => 'Peran'],
                 ['field' => 'institution.name', 'label' => 'Institusi'],
+                ['field' => 'year', 'label' => 'Tahun'],
+                ['field' => 'is_active', 'label' => 'Status', 'type' => 'boolean'],
             ]" :actions="[
                 ['type' => 'edit', 'label' => 'Edit Pengguna'],
                 ['type' => 'delete', 'label' => 'Hapus Pengguna'],
@@ -23,7 +25,7 @@
         :fields="[
                 [
                     'name' => 'username',
-                    'label' => 'Nama Pengguna',
+                    'label' => 'Username',
                     'type' => 'text',
                     'required' => true,
                     'placeholder' => 'Masukkan nama pengguna'
@@ -40,7 +42,8 @@
                     'label' => 'Peran',
                     'type' => 'select',
                     'required' => true,
-                    'options' => $roles->pluck('name', 'id')->toArray()
+                    'options' => $roles->pluck('name', 'id')->toArray(),
+                    'help' => 'Hanya satu pengguna aktif yang diperbolehkan untuk peran Ketua Umum, Sekretaris Umum, dan Pembina per institusi per tahun'
                 ],
                 [
                     'name' => 'institution_id',
@@ -50,11 +53,29 @@
                     'options' => $institutions->pluck('name', 'id')->toArray()
                 ],
                 [
+                    'name' => 'year',
+                    'label' => 'Tahun',
+                    'type' => 'year',
+                    'required' => true,
+                    'placeholder' => 'Masukkan tahun'
+                ],
+                [
+                    'name' => 'is_active',
+                    'label' => 'Status',
+                    'type' => 'select',
+                    'required' => true,
+                    'options' => [
+                        '1' => 'Aktif',
+                        '0' => 'Tidak Aktif'
+                    ],
+                    'help' => 'Status aktif hanya bisa diberikan pada satu pengguna per peran per institusi per tahun'
+                ],
+                [
                     'name' => 'password',
                     'label' => 'Password',
                     'type' => 'password',
                     'required' => true,
-                    'placeholder' => 'Enter password'
+                    'placeholder' => 'Masukkan password'
                 ]
             ]" />
 
@@ -80,7 +101,8 @@
                     'label' => 'Peran',
                     'type' => 'select',
                     'required' => true,
-                    'options' => $roles->pluck('name', 'id')->toArray()
+                    'options' => $roles->pluck('name', 'id')->toArray(),
+                    'help' => 'Hanya satu pengguna aktif yang diperbolehkan untuk peran Ketua Umum, Sekretaris Umum, dan Pembina per institusi per tahun'
                 ],
                 [
                     'name' => 'institution_id',
@@ -88,6 +110,24 @@
                     'type' => 'select',
                     'required' => true,
                     'options' => $institutions->pluck('name', 'id')->toArray()
+                ],
+                [
+                    'name' => 'year',
+                    'label' => 'Tahun',
+                    'type' => 'year',
+                    'required' => true,
+                    'placeholder' => 'Masukkan tahun'
+                ],
+                [
+                    'name' => 'is_active',
+                    'label' => 'Status',
+                    'type' => 'select',
+                    'required' => true,
+                    'options' => [
+                        '1' => 'Aktif',
+                        '0' => 'Tidak Aktif'
+                    ],
+                    'help' => 'Status aktif hanya bisa diberikan pada satu pengguna per peran per institusi per tahun'
                 ],
                 [
                     'name' => 'password',

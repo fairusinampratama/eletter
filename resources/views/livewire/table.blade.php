@@ -151,7 +151,7 @@
                                         <x-dynamic-component :component="$column['component']" :letter="$item" />
                                         @endif
                                         @else
-                                        {{ data_get($item, $column['field']) }}
+                                        {{ $formatValue(data_get($item, $column['field']), $column) }}
                                         @endif
                                     </div>
                                 </td>

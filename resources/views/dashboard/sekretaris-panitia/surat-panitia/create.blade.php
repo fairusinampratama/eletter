@@ -7,8 +7,8 @@
     <div x-data="qrPlacement({
         sekretarisPanitiaId: {{ $sekretarisPanitia ? $sekretarisPanitia->id : 'null' }},
         ketuaPanitiaId: {{ $ketuaPanitia ? $ketuaPanitia->id : 'null' }},
-        ketuaUmumId: {{ $users->where('role_id', 2)->first()->id ?? 'null' }},
-        pembinaId: {{ $users->where('role_id', 6)->first()->id ?? 'null' }}
+        ketuaUmumId: {{ $users->where('role_id', 2)->where('is_active', true)->first()->id ?? 'null' }},
+        pembinaId: {{ $users->where('role_id', 6)->where('is_active', true)->first()->id ?? 'null' }}
     })" x-init="$store.pdf.currentPage = 1" class="grid grid-cols-1 lg:grid-cols-2">
         <!-- Left: PDF Viewer -->
         <div
@@ -415,7 +415,7 @@
                     id: ketuaUmumId,
                     label: 'KU',
                     labelFull: 'Ketua Umum',
-                    fullname: @json($users->where('role_id', 2)->first()->fullname ?? '-'),
+                    fullname: @json($users->where('role_id', 2)->where('is_active', true)->first()->fullname ?? '-'),
                     order: 3,
                     qr_page: null,
                     qr_x: null,
@@ -426,7 +426,7 @@
                     id: pembinaId,
                     label: 'P',
                     labelFull: 'Pembina',
-                    fullname: @json($users->where('role_id', 6)->first()->fullname ?? '-'),
+                    fullname: @json($users->where('role_id', 6)->where('is_active', true)->first()->fullname ?? '-'),
                     order: 4,
                     qr_page: null,
                     qr_x: null,
@@ -503,15 +503,19 @@
                     return;
                 }
 
-                // Ketua Panitia and Ketua Umum are required
+                // Ketua Panitia, Ketua Umum, and Pembina are required
                 const ketuaPanitia = this.signers.ketua_panitia;
                 const ketuaUmum = this.signers.ketua_umum;
+                const pembina = this.signers.pembina;
                 let missing = [];
                 if (!ketuaPanitia || !ketuaPanitia.isPlaced) {
                     missing.push('QR untuk penandatangan Ketua Panitia wajib ditempatkan.');
                 }
                 if (!ketuaUmum || !ketuaUmum.isPlaced) {
                     missing.push('QR untuk penandatangan Ketua Umum wajib ditempatkan.');
+                }
+                if (!pembina || !pembina.isPlaced) {
+                    missing.push('QR untuk penandatangan Pembina wajib ditempatkan.');
                 }
                 if (missing.length) {
                     showCustomAlert('danger', 'Pastikan persyaratan berikut terpenuhi:', missing);

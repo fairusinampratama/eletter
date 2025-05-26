@@ -37,6 +37,8 @@ class KepanitiaanController extends SekretarisUmumController
         try {
             $request->validate([
                 'name' => ['required', 'string', 'max:255', 'unique:committees,name'],
+                'year' => ['required', 'integer'],
+                'is_active' => ['required', 'boolean'],
                 'chairman_username' => ['required', 'string', 'max:255', 'unique:users,username'],
                 'chairman_fullname' => ['required', 'string', 'max:255'],
                 'chairman_password' => ['required', 'string', 'min:8'],
@@ -53,6 +55,8 @@ class KepanitiaanController extends SekretarisUmumController
                     'password' => Hash::make($request->chairman_password),
                     'role_id' => 4, // Chairman role
                     'institution_id' => auth()->user()->institution_id,
+                    'year' => $request->year,
+                    'is_active' => $request->is_active,
                 ]);
 
                 // Create secretary
@@ -62,6 +66,8 @@ class KepanitiaanController extends SekretarisUmumController
                     'password' => Hash::make($request->secretary_password),
                     'role_id' => 5, // Secretary role
                     'institution_id' => auth()->user()->institution_id,
+                    'year' => $request->year,
+                    'is_active' => $request->is_active,
                 ]);
 
                 // Create committee
@@ -107,6 +113,8 @@ class KepanitiaanController extends SekretarisUmumController
 
             $request->validate([
                 'name' => ['required', 'string', 'max:255', 'unique:committees,name,' . $committee->id],
+                'chairman_year' => ['required', 'integer'],
+                'chairman_is_active' => ['required', 'boolean'],
                 'chairman_username' => ['required', 'string', 'max:255', 'unique:users,username,' . $committee->chairman_id],
                 'chairman_fullname' => ['required', 'string', 'max:255'],
                 'chairman_password' => ['nullable', 'string', 'min:8'],
@@ -120,15 +128,19 @@ class KepanitiaanController extends SekretarisUmumController
                 $chairman = $committee->chairman;
                 $chairman->username = $request->chairman_username;
                 $chairman->fullname = $request->chairman_fullname;
+                $chairman->year = $request->chairman_year;
+                $chairman->is_active = $request->chairman_is_active;
                 if ($request->filled('chairman_password')) {
                     $chairman->password = Hash::make($request->chairman_password);
                 }
                 $chairman->save();
 
-                // Update secretary
+                // Update secretary with same year and is_active as chairman
                 $secretary = $committee->secretary;
                 $secretary->username = $request->secretary_username;
                 $secretary->fullname = $request->secretary_fullname;
+                $secretary->year = $request->chairman_year;
+                $secretary->is_active = $request->chairman_is_active;
                 if ($request->filled('secretary_password')) {
                     $secretary->password = Hash::make($request->secretary_password);
                 }

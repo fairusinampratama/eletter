@@ -30,6 +30,30 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
+        // Check if user is active
+        if (!$user->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login')->with('error', 'Akun Anda tidak aktif. Silakan hubungi Admin Kemahasiswaan.');
+        }
+
+        // Check for committee roles
+        if (in_array((int) $user->role_id, [4, 5])) { // 4 = Ketua Panitia, 5 = Sekretaris Panitia
+            $committee = null;
+            if ((int) $user->role_id === 4) {
+                $committee = \App\Models\Committee::where('chairman_id', $user->id)->first();
+            } else {
+                $committee = \App\Models\Committee::where('secretary_id', $user->id)->first();
+            }
+            if (!$committee) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('login')->with('error', 'Anda tidak terdaftar sebagai ketua atau sekretaris panitia.');
+            }
+        }
+
         return redirect()->intended(
             match ((int) $user->role_id) {
                 1 => route('admin-kemahasiswaan.dashboard'),

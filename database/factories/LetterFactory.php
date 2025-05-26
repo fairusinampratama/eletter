@@ -28,7 +28,7 @@ class LetterFactory extends Factory
             'date' => fake()->date(),
             'file_path' => fake()->filePath(),
             'file_hash' => fake()->sha256(),
-            'status' => fake()->randomElement(['pending', 'signed', 'rejected']),
+            'status' => fake()->randomElement(['pending', 'signed']),
         ];
     }
 }

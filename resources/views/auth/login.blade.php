@@ -10,6 +10,7 @@
             </a>
             <div
                 class="w-full bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
+                <x-alerts.flash-messages />
                 <div class="mb-6 text-center">
                     <h1 class="text-2xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white mb-1">
                         Welcome Back!</h1>

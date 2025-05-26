@@ -145,6 +145,12 @@
                                 class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                 placeholder="{{ $field['placeholder'] ?? '' }}" {{ isset($field['required']) &&
                                 $field['required'] ? 'required' : '' }}>
+                            @elseif($field['type'] === 'year')
+                            <input type="number" name="{{ $field['name'] }}" id="{{ $field['name'] }}"
+                                class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                placeholder="{{ $field['placeholder'] ?? '' }}" min="2000" max="{{ date('Y') + 1 }}"
+                                value="{{ date('Y') }}" {{ isset($field['required']) && $field['required'] ? 'required'
+                                : '' }}>
                             @elseif($field['type'] === 'hidden')
                             <input type="hidden" name="{{ $field['name'] }}" id="{{ $field['name'] }}"
                                 value="{{ $field['value'] ?? '' }}">

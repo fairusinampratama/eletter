@@ -113,61 +113,120 @@
                             : 'Not signed yet';
                             @endphp
                             <div
-                                class="w-full bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden p-4">
-                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
-                                    <div class="flex items-start gap-2 sm:gap-3 w-full">
-                                        <div class="flex-shrink-0 mt-0.5 sm:mt-1">
-                                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                                <path stroke="currentColor" stroke-linecap="round"
-                                                    stroke-linejoin="round" stroke-width="2"
-                                                    d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                                {{ $signature->signer->fullname }}
-                                            </p>
-                                            <div class="mt-1 flex flex-wrap items-center gap-x-2 text-xs">
-                                                <span class="text-gray-500 dark:text-gray-400">{{
-                                                    $signature->signer->role->name }}</span>
-                                                @if($signature->signer->isCommitteeChairman() ||
-                                                $signature->signer->isCommitteeSecretary())
-                                                @php
-                                                $committee = $signature->signer->committeesAsChairman->first() ??
-                                                $signature->signer->committeesAsSecretary->first();
-                                                @endphp
-                                                @if($committee)
-                                                <span class="text-gray-400 dark:text-gray-500">•</span>
-                                                <span class="text-gray-500 dark:text-gray-400">{{ $committee->name
-                                                    }}</span>
-                                                @endif
-                                                @endif
-                                                @if($signature->signer->institution)
-                                                <span class="text-gray-400 dark:text-gray-500">•</span>
-                                                <span class="text-gray-500 dark:text-gray-400">{{
-                                                    $signature->signer->institution->name }}</span>
+                                class="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                <div class="p-4 sm:p-5">
+                                    <div
+                                        class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                                        <div class="flex items-start gap-3 sm:gap-4 w-full">
+                                            <div class="flex-shrink-0 mt-1">
+                                                <div
+                                                    class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-gray-800 dark:text-white"
+                                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                                                        height="24" fill="none" viewBox="0 0 24 24">
+                                                        <path stroke="currentColor" stroke-width="2"
+                                                            d="M7 17v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3Zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-2">
+                                                    <p
+                                                        class="text-base font-semibold text-gray-900 dark:text-white truncate">
+                                                        {{ $signature->signer->fullname }}
+                                                    </p>
+                                                    <span
+                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $signature->signer->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }}">
+                                                        {{ $signature->signer->is_active ? 'Active' : 'Inactive' }}
+                                                    </span>
+                                                </div>
+                                                <div class="mt-2 space-y-1">
+                                                    <div
+                                                        class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        {{ $signature->signer->role->name }}
+                                                    </div>
+                                                    @if($signature->signer->isCommitteeChairman() ||
+                                                    $signature->signer->isCommitteeSecretary())
+                                                    @php
+                                                    $committee = $signature->signer->committeesAsChairman->first() ??
+                                                    $signature->signer->committeesAsSecretary->first();
+                                                    @endphp
+                                                    @if($committee)
+                                                    <div
+                                                        class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                        </svg>
+                                                        {{ $committee->name }}
+                                                    </div>
+                                                    @endif
+                                                    @endif
+                                                    @if($signature->signer->institution)
+                                                    <div
+                                                        class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                        </svg>
+                                                        {{ $signature->signer->institution->name }}
+                                                    </div>
+                                                    @endif
+                                                    <div
+                                                        class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        Year: {{ $signature->signer->year }}
+                                                    </div>
+                                                </div>
+                                                @if($isInvalid)
+                                                <div class="mt-3 p-2 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                                                    <p class="text-sm text-red-600 dark:text-red-400">
+                                                        {{ $signatureReasons[$signature->id] }}
+                                                    </p>
+                                                </div>
                                                 @endif
                                             </div>
-                                            @if($isInvalid)
-                                            <p class="mt-1 text-red-600 dark:text-red-400 text-xs">
-                                                {{ $signatureReasons[$signature->id] }}
-                                            </p>
+                                        </div>
+                                        <div class="flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto">
+                                            @if($signature->signed_at)
+                                            <span
+                                                class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium {{ $statusColor }} text-center w-full sm:w-auto">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                {{ $statusText }}
+                                            </span>
+                                            @else
+                                            <span
+                                                class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 text-center w-full sm:w-auto">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Not signed yet
+                                            </span>
                                             @endif
                                         </div>
-                                    </div>
-                                    <div class="flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto">
-                                        @if($signature->signed_at)
-                                        <span
-                                            class="block sm:inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium {{ $statusColor }} text-center w-full sm:w-auto">
-                                            {{ $statusText }}
-                                        </span>
-                                        @else
-                                        <span
-                                            class="block sm:inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 text-center w-full sm:w-auto">
-                                            Not signed yet
-                                        </span>
-                                        @endif
                                     </div>
                                 </div>
                             </div>

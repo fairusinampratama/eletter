@@ -169,6 +169,26 @@ class Table extends Component
         return $query;
     }
 
+    protected function formatValue($value, $column)
+    {
+        if (isset($column['type'])) {
+            switch ($column['type']) {
+                case 'boolean':
+                    if (is_string($value)) {
+                        return $value === '1' ? 'Aktif' : 'Tidak Aktif';
+                    }
+                    return $value ? 'Aktif' : 'Tidak Aktif';
+                case 'number':
+                    return $value;
+                case 'component':
+                    return $value;
+                default:
+                    return $value;
+            }
+        }
+        return $value;
+    }
+
     public function render()
     {
         $data = $this->getQuery()->paginate(10);
@@ -178,6 +198,7 @@ class Table extends Component
             'sortField' => $this->sortField,
             'sortDirection' => $this->sortDirection,
             'availableActions' => $this->getAvailableActions($data),
+            'formatValue' => [$this, 'formatValue'],
         ]);
     }
 
