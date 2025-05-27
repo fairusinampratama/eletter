@@ -35,7 +35,19 @@ class KategoriSuratController extends SekretarisUmumController
     {
         try {
             $request->validate([
-                'name' => 'required|string|max:255'
+                'name' => [
+                    'required',
+                    'string',
+                    'min:3',
+                    'max:50',
+                    'regex:/^[a-zA-Z0-9\s]+$/',
+                    'unique:letter_categories,name,NULL,id,institution_id,' . auth()->user()->institution_id
+                ]
+            ], [
+                'name.min' => 'Nama kategori minimal 3 karakter',
+                'name.max' => 'Nama kategori maksimal 50 karakter',
+                'name.regex' => 'Nama kategori hanya boleh berisi huruf, angka, dan spasi',
+                'name.unique' => 'Nama kategori sudah digunakan'
             ]);
 
             LetterCategory::create([
@@ -60,7 +72,19 @@ class KategoriSuratController extends SekretarisUmumController
     {
         try {
             $request->validate([
-                'name' => 'required|string|max:255'
+                'name' => [
+                    'required',
+                    'string',
+                    'min:3',
+                    'max:50',
+                    'regex:/^[a-zA-Z0-9\s]+$/',
+                    'unique:letter_categories,name,' . $kategori_surat->id . ',id,institution_id,' . auth()->user()->institution_id
+                ]
+            ], [
+                'name.min' => 'Nama kategori minimal 3 karakter',
+                'name.max' => 'Nama kategori maksimal 50 karakter',
+                'name.regex' => 'Nama kategori hanya boleh berisi huruf, angka, dan spasi',
+                'name.unique' => 'Nama kategori sudah digunakan'
             ]);
 
             $kategori_surat->update([

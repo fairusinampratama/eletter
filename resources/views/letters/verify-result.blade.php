@@ -235,7 +235,7 @@
                     </div>
 
                     <div class="flex items-center justify-start pt-4">
-                        <a href="{{ route('verify', $letter->verification_id) }}"
+                        <a href="{{ url()->previous() }}"
                             class="inline-flex items-center text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                                 viewBox="0 0 20 20">

@@ -69,7 +69,14 @@ class SuratPengurusController extends SekretarisUmumController
 
         try {
             $request->validate([
-                'code' => 'required|string|unique:letters,code',
+                'code' => [
+                    'required',
+                    'string',
+                    'min:3',
+                    'max:100',
+                    'unique:letters,code',
+                    'regex:/^[a-zA-Z0-9\s-]+$/'
+                ],
                 'file_path' => 'required|file|mimes:pdf|max:10240',
                 'category_id' => 'required|exists:letter_categories,id',
                 'date' => 'required|date',
@@ -79,6 +86,11 @@ class SuratPengurusController extends SekretarisUmumController
                 'signers.*.qr_page' => 'required|integer',
                 'signers.*.qr_x' => 'required|numeric',
                 'signers.*.qr_y' => 'required|numeric',
+            ], [
+                'code.min' => 'Kode surat minimal 3 karakter',
+                'code.max' => 'Kode surat maksimal 100 karakter',
+                'code.regex' => 'Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda hubung',
+                'code.unique' => 'Kode surat sudah digunakan',
             ]);
             // Log after validation
             \Log::info('Step 2: Request data after validation', $request->all());

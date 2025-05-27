@@ -22,7 +22,8 @@
                         <label for="username" class="text-sm font-medium text-gray-900 dark:text-white">Username</label>
                         <input type="text" name="username" id="username" autocomplete="username"
                             class="h-12 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full px-4 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                            placeholder="your username" required value="{{ old('username') }}">
+                            placeholder="your username" required value="{{ old('username') }}" minlength="8"
+                            maxlength="12">
                         @if ($errors->has('username'))
                         <span class="text-xs text-red-700 dark:text-red-300">{{ $errors->first('username') }}</span>
                         @endif
@@ -33,7 +34,7 @@
                             <input :type="show ? 'text' : 'password'" name="password" id="password"
                                 autocomplete="current-password" placeholder="••••••••"
                                 class="h-12 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full px-4 pr-12 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                                required>
+                                required minlength="8" maxlength="12">
                             <button type="button" @click="show = !show"
                                 class="absolute inset-y-0 right-0 flex items-center px-3 cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
                                 style="height: 100%;">

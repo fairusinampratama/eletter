@@ -21,8 +21,8 @@ class UserSeeder extends Seeder
         // Admin
         $adminKeyPair = $ecdsaService->generateKeyPair();
         User::create([
-            'username' => 'admin',
-            'password' => bcrypt('admin'),
+            'username' => 'admin123',
+            'password' => bcrypt('admin123'),
             'fullname' => 'Admin Kemahasiswaan',
             'role_id' => 1,
             'institution_id' => 17,
@@ -37,7 +37,7 @@ class UserSeeder extends Seeder
         User::create([
             'username' => 'ketuaumum',
             'password' => bcrypt('ketuaumum'),
-            'fullname' => 'Budi Santoso',
+            'fullname' => 'M. Sirajuddin Al Haqiqiy',
             'role_id' => 2,
             'institution_id' => 1,
             'public_key' => $ketuaUmumKeyPair['publicKey'],
@@ -49,9 +49,9 @@ class UserSeeder extends Seeder
         // Sekretaris Umum
         $sekretarisUmumKeyPair = $ecdsaService->generateKeyPair();
         User::create([
-            'username' => 'sekretarisumum',
-            'password' => bcrypt('sekretarisumum'),
-            'fullname' => 'Siti Aminah',
+            'username' => 'sekumsekum',
+            'password' => bcrypt('sekumsekum'),
+            'fullname' => 'Agam Jatimulya',
             'role_id' => 3,
             'institution_id' => 1,
             'public_key' => $sekretarisUmumKeyPair['publicKey'],
@@ -65,7 +65,7 @@ class UserSeeder extends Seeder
         $ketuaPanitia = User::create([
             'username' => 'ketuapanitia',
             'password' => bcrypt('ketuapanitia'),
-            'fullname' => 'Robert Pangaribuan',
+            'fullname' => 'Moh. Almukarrom. H. D.',
             'role_id' => 4,
             'institution_id' => 1,
             'public_key' => $ketuaPanitiaKeyPair['publicKey'],
@@ -77,9 +77,9 @@ class UserSeeder extends Seeder
         // Sekretaris Panitia
         $sekretarisPanitiaKeyPair = $ecdsaService->generateKeyPair();
         $sekretarisPanitia = User::create([
-            'username' => 'sekretarispanitia',
-            'password' => bcrypt('sekretarispanitia'),
-            'fullname' => 'Dewi Anggi',
+            'username' => 'sekpansekpan',
+            'password' => bcrypt('sekpansekpan'),
+            'fullname' => 'Moch. Jofani Ubaidillah',
             'role_id' => 5,
             'institution_id' => 1,
             'public_key' => $sekretarisPanitiaKeyPair['publicKey'],
@@ -91,7 +91,7 @@ class UserSeeder extends Seeder
         // Create a committee and associate users
         Committee::create([
             'institution_id' => 1,
-            'name' => 'Panitia Kegiatan',
+            'name' => 'Sosialisasi Program Kerja UKM Pagar Nusa',
             'chairman_id' => $ketuaPanitia->id,
             'secretary_id' => $sekretarisPanitia->id,
         ]);
@@ -99,9 +99,9 @@ class UserSeeder extends Seeder
         // Pembina
         $pembinaKeyPair = $ecdsaService->generateKeyPair();
         User::create([
-            'username' => 'pembina',
-            'password' => bcrypt('pembina'),
-            'fullname' => 'Rizky Pratama',
+            'username' => 'pembina123',
+            'password' => bcrypt('pembina123'),
+            'fullname' => 'Dr. H. Saiful Mustofa, M.Pd, MA',
             'role_id' => 6,
             'institution_id' => 1,
             'public_key' => $pembinaKeyPair['publicKey'],

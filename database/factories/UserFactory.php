@@ -22,14 +22,25 @@ class UserFactory extends Factory
         $ecdsaService = app(ECDSAService::class);
         $keyPair = $ecdsaService->generateKeyPair();
 
+        $roleId = $this->faker->randomElement([2, 3, 6]);
+        $currentYear = date('Y');
+
+        // Check if there's already an active user for this role in current year
+        $hasActiveUser = \App\Models\User::where('role_id', $roleId)
+            ->where('year', $currentYear)
+            ->where('is_active', true)
+            ->exists();
+
         return [
             'username' => $this->faker->unique()->userName,
             'password' => Hash::make('password'),
             'fullname' => $this->faker->name,
-            'role_id' => $this->faker->randomElement([2, 3, 6]),
+            'role_id' => $roleId,
             'institution_id' => $this->faker->numberBetween(1, 16),
             'public_key' => $keyPair['publicKey'],
             'private_key' => $keyPair['privateKey'],
+            'year' => $currentYear,
+            'is_active' => !$hasActiveUser,
         ];
     }
 

@@ -24,7 +24,11 @@
                     'label' => 'Nama Kategori',
                     'type' => 'text',
                     'required' => true,
-                    'placeholder' => 'Masukkan nama kategori surat'
+                    'placeholder' => 'Masukkan nama kategori surat',
+                    'minlength' => '3',
+                    'maxlength' => '50',
+                    'pattern' => '^[a-zA-Z0-9\s]+$',
+                    'title' => 'Nama kategori hanya boleh berisi huruf, dan angka (3-50 karakter)'
                 ]
             ]" />
 
@@ -36,7 +40,11 @@
                     'label' => 'Nama Kategori',
                     'type' => 'text',
                     'required' => true,
-                    'placeholder' => 'Masukkan nama kategori surat'
+                    'placeholder' => 'Masukkan nama kategori surat',
+                    'minlength' => '3',
+                    'maxlength' => '50',
+                    'pattern' => '^[a-zA-Z0-9\s]+$',
+                    'title' => 'Nama kategori hanya boleh berisi huruf, dan angka (3-50 karakter)'
                 ]
             ]" />
 

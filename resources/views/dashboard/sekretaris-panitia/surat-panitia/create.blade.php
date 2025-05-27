@@ -74,7 +74,9 @@
                     <div class="col-span-6">
                         <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Kode
                             Surat <span class="text-red-500">*</span></label>
-                        <input type="text" name="code" id="code" value="{{ old('code') }}" required
+                        <input type="text" name="code" id="code" value="{{ old('code') }}" required minlength="3"
+                            maxlength="100" pattern="^[a-zA-Z0-9\s-]+$"
+                            title="Kode surat harus berisi 3-100 karakter, hanya huruf, angka, spasi, dan tanda hubung"
                             class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                             placeholder="Contoh: ABC-20240601-001">
                         @error('code')
@@ -279,6 +281,20 @@
         const file = event.target.files[0];
         if (!file) return;
 
+        // Validate file type
+        if (file.type !== 'application/pdf') {
+            showCustomAlert('danger', 'Validasi Gagal', ['File harus berformat PDF']);
+            event.target.value = ''; // Clear the file input
+            return;
+        }
+
+        // Validate file size (10MB = 10 * 1024 * 1024 bytes)
+        if (file.size > 10 * 1024 * 1024) {
+            showCustomAlert('danger', 'Validasi Gagal', ['Ukuran file maksimal 10MB']);
+            event.target.value = ''; // Clear the file input
+            return;
+        }
+
         // Show loading spinner
         document.getElementById('pdf-loading').classList.remove('hidden');
 
@@ -301,7 +317,8 @@
             renderPage(pageNum);
         } catch (error) {
             console.error('Error loading PDF:', error);
-            this.showAlert('error', 'Error loading PDF. Please try again.');
+            showCustomAlert('danger', 'Validasi Gagal', ['File PDF tidak valid atau rusak']);
+            event.target.value = ''; // Clear the file input
         } finally {
             // Hide loading spinner
             document.getElementById('pdf-loading').classList.add('hidden');
@@ -496,29 +513,78 @@
             },
             validateAndSubmit(e) {
                 const form = document.getElementById('surat-form');
-                // File input validation
-                const fileInput = document.getElementById('file_path');
-                if (!fileInput.files || !fileInput.files.length) {
-                    showCustomAlert('danger', 'Pastikan persyaratan berikut terpenuhi:', ['Silakan pilih file PDF terlebih dahulu.']);
+                
+                // 1. Kode Surat Validation
+                const codeInput = document.getElementById('code');
+                const codeValue = codeInput.value.trim();
+                
+                if (!codeValue) {
+                    showCustomAlert('danger', 'Validasi Gagal', ['Kode surat harus diisi']);
+                    return;
+                }
+                
+                if (codeValue.length < 3) {
+                    showCustomAlert('danger', 'Validasi Gagal', ['Kode surat minimal 3 karakter']);
+                    return;
+                }
+                
+                if (codeValue.length > 100) {
+                    showCustomAlert('danger', 'Validasi Gagal', ['Kode surat maksimal 100 karakter']);
+                    return;
+                }
+                
+                if (!/^[a-zA-Z0-9\s-]+$/.test(codeValue)) {
+                    showCustomAlert('danger', 'Validasi Gagal', ['Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda hubung']);
                     return;
                 }
 
-                // Ketua Panitia, Ketua Umum, and Pembina are required
+                // 2. Kategori Surat Validation
+                const categorySelect = document.getElementById('category_id');
+                if (!categorySelect.value) {
+                    showCustomAlert('danger', 'Validasi Gagal', ['Silakan pilih kategori surat']);
+                    return;
+                }
+
+                // 3. Tanggal Surat Validation
+                const dateInput = document.getElementById('date');
+                if (!dateInput.value) {
+                    showCustomAlert('danger', 'Validasi Gagal', ['Silakan pilih tanggal surat']);
+                    return;
+                }
+
+                // Validate date range
+                const selectedDate = new Date(dateInput.value);
+                const minDate = new Date('2000-01-01');
+                const maxDate = new Date('2100-12-31');
+
+                if (selectedDate < minDate || selectedDate > maxDate) {
+                    showCustomAlert('danger', 'Validasi Gagal', ['Tanggal surat harus antara 01 Januari 2000 dan 31 Desember 2100']);
+                    return;
+                }
+
+                // 4. File Surat Validation
+                const fileInput = document.getElementById('file_path');
+                if (!fileInput.files || !fileInput.files.length) {
+                    showCustomAlert('danger', 'Validasi Gagal', ['Silakan pilih file PDF terlebih dahulu']);
+                    return;
+                }
+
+                // 5. Tanda Tangan Validation
                 const ketuaPanitia = this.signers.ketua_panitia;
                 const ketuaUmum = this.signers.ketua_umum;
                 const pembina = this.signers.pembina;
                 let missing = [];
                 if (!ketuaPanitia || !ketuaPanitia.isPlaced) {
-                    missing.push('QR untuk penandatangan Ketua Panitia wajib ditempatkan.');
+                    missing.push('QR untuk penandatangan Ketua Panitia wajib ditempatkan');
                 }
                 if (!ketuaUmum || !ketuaUmum.isPlaced) {
-                    missing.push('QR untuk penandatangan Ketua Umum wajib ditempatkan.');
+                    missing.push('QR untuk penandatangan Ketua Umum wajib ditempatkan');
                 }
                 if (!pembina || !pembina.isPlaced) {
-                    missing.push('QR untuk penandatangan Pembina wajib ditempatkan.');
+                    missing.push('QR untuk penandatangan Pembina wajib ditempatkan');
                 }
                 if (missing.length) {
-                    showCustomAlert('danger', 'Pastikan persyaratan berikut terpenuhi:', missing);
+                    showCustomAlert('danger', 'Validasi Gagal', missing);
                     return;
                 }
 

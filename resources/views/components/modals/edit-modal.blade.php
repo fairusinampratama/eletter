@@ -78,7 +78,12 @@
                                 class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                 placeholder="{{ $field['placeholder'] ?? 'Enter ' . strtolower($field['label']) }}" {{
                                 isset($field['required']) && $field['required'] ? 'required' : '' }}
-                                x-model="item?.{{ $field['name'] }}">
+                                x-model="item?.{{ $field['name'] }}" @if(isset($field['maxlength']))
+                                maxlength="{{ $field['maxlength'] }}" @endif @if(isset($field['minlength']))
+                                minlength="{{ $field['minlength'] }}" @endif @if(isset($field['pattern']))
+                                pattern="{{ $field['pattern'] }}" @endif @if(isset($field['title']))
+                                title="{{ $field['title'] }}" @endif @if(isset($field['oninput']))
+                                oninput="{{ $field['oninput'] }}" @endif>
                             @endif
                         </div>
                         @endforeach

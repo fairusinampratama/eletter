@@ -25,6 +25,10 @@
                     'label' => 'Nama Kepanitiaan',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 3,
+                    'maxlength' => 50,
+                    'pattern' => '^[a-zA-Z0-9\s]+$',
+                    'title' => 'Nama kepanitiaan harus berisi 3-50 karakter, hanya huruf, angka, dan spasi',
                     'placeholder' => 'Masukkan nama kepanitiaan',
                     'colspan' => 6
                 ],
@@ -52,6 +56,10 @@
                     'label' => 'Nama Lengkap Ketua',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 3,
+                    'maxlength' => 50,
+                    'pattern' => '^[a-zA-Z\s.,]+$',
+                    'title' => 'Nama lengkap hanya boleh berisi huruf, spasi, titik, dan koma (3-50 karakter)',
                     'placeholder' => 'Masukkan nama lengkap ketua',
                     'colspan' => 6
                 ],
@@ -60,6 +68,10 @@
                     'label' => 'Nama Pengguna Ketua',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 8,
+                    'maxlength' => 12,
+                    'pattern' => '^[a-zA-Z0-9_]+$',
+                    'title' => 'Username hanya boleh berisi huruf, angka, dan underscore (8-12 karakter)',
                     'placeholder' => 'Masukkan nama pengguna ketua'
                 ],
                 [
@@ -67,6 +79,9 @@
                     'label' => 'Password Ketua',
                     'type' => 'password',
                     'required' => true,
+                    'minlength' => 8,
+                    'maxlength' => 12,
+                    'title' => 'Password harus 8-12 karakter',
                     'placeholder' => 'Masukkan password ketua'
                 ],
                 [
@@ -74,6 +89,10 @@
                     'label' => 'Nama Lengkap Sekretaris',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 3,
+                    'maxlength' => 50,
+                    'pattern' => '^[a-zA-Z\s.,]+$',
+                    'title' => 'Nama lengkap hanya boleh berisi huruf, spasi, titik, dan koma (3-50 karakter)',
                     'placeholder' => 'Masukkan nama lengkap sekretaris',
                     'colspan' => 6
                 ],
@@ -89,6 +108,9 @@
                     'label' => 'Password Sekretaris',
                     'type' => 'password',
                     'required' => true,
+                    'minlength' => 8,
+                    'maxlength' => 12,
+                    'title' => 'Password harus 8-12 karakter',
                     'placeholder' => 'Masukkan password sekretaris'
                 ]
             ]" />
@@ -101,6 +123,10 @@
                     'label' => 'Nama Kepanitiaan',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 3,
+                    'maxlength' => 50,
+                    'pattern' => '^[a-zA-Z0-9\s]+$',
+                    'title' => 'Nama kepanitiaan harus berisi 3-50 karakter, hanya huruf, angka, dan spasi',
                     'placeholder' => 'Masukkan nama kepanitiaan',
                     'colspan' => 6
                 ],
@@ -128,6 +154,10 @@
                     'label' => 'Nama Lengkap Ketua',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 3,
+                    'maxlength' => 50,
+                    'pattern' => '^[a-zA-Z\s.,]+$',
+                    'title' => 'Nama lengkap hanya boleh berisi huruf, spasi, titik, dan koma (3-50 karakter)',
                     'placeholder' => 'Masukkan nama lengkap ketua',
                     'colspan' => 6
                 ],
@@ -136,12 +166,19 @@
                     'label' => 'Nama Pengguna Ketua',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 8,
+                    'maxlength' => 12,
+                    'pattern' => '^[a-zA-Z0-9_]+$',
+                    'title' => 'Username hanya boleh berisi huruf, angka, dan underscore (8-12 karakter)',
                     'placeholder' => 'Masukkan nama pengguna ketua'
                 ],
                 [
                     'name' => 'chairman.password',
                     'label' => 'Password Ketua',
                     'type' => 'password',
+                    'minlength' => 8,
+                    'maxlength' => 12,
+                    'title' => 'Password harus 8-12 karakter',
                     'placeholder' => 'Biarkan kosong untuk menjaga password saat ini'
                 ],
                 [
@@ -149,6 +186,10 @@
                     'label' => 'Nama Lengkap Sekretaris',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 3,
+                    'maxlength' => 50,
+                    'pattern' => '^[a-zA-Z\s.,]+$',
+                    'title' => 'Nama lengkap hanya boleh berisi huruf, spasi, titik, dan koma (3-50 karakter)',
                     'placeholder' => 'Masukkan nama lengkap sekretaris',
                     'colspan' => 6
                 ],
@@ -157,12 +198,19 @@
                     'label' => 'Nama Pengguna Sekretaris',
                     'type' => 'text',
                     'required' => true,
+                    'minlength' => 8,
+                    'maxlength' => 12,
+                    'pattern' => '^[a-zA-Z0-9_]+$',
+                    'title' => 'Username hanya boleh berisi huruf, angka, dan underscore (8-12 karakter)',
                     'placeholder' => 'Masukkan nama pengguna sekretaris'
                 ],
                 [
                     'name' => 'secretary.password',
                     'label' => 'Password Sekretaris',
                     'type' => 'password',
+                    'minlength' => 8,
+                    'maxlength' => 12,
+                    'title' => 'Password harus 8-12 karakter',
                     'placeholder' => 'Biarkan kosong untuk menjaga password saat ini'
                 ]
             ]" />

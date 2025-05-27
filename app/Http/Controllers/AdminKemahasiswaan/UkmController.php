@@ -48,7 +48,18 @@ class UkmController extends AdminKemahasiswaanController
     {
         try {
             $request->validate([
-                'name' => ['required', 'string', 'max:255', 'unique:institutions'],
+                'name' => [
+                    'required',
+                    'string',
+                    'min:3',
+                    'max:30',
+                    'unique:institutions',
+                    'regex:/^[a-zA-Z0-9\s]+$/'
+                ],
+            ], [
+                'name.min' => 'Nama UKM minimal 3 karakter',
+                'name.max' => 'Nama UKM maksimal 30 karakter',
+                'name.regex' => 'Nama UKM hanya boleh berisi huruf, angka, dan spasi'
             ]);
 
             Institution::create([
@@ -73,7 +84,18 @@ class UkmController extends AdminKemahasiswaanController
             $institution = Institution::findOrFail($id);
 
             $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:institutions,name,' . $id,
+                'name' => [
+                    'required',
+                    'string',
+                    'min:3',
+                    'max:30',
+                    'unique:institutions,name,' . $id,
+                    'regex:/^[a-zA-Z0-9\s]+$/'
+                ],
+            ], [
+                'name.min' => 'Nama UKM minimal 3 karakter',
+                'name.max' => 'Nama UKM maksimal 30 karakter',
+                'name.regex' => 'Nama UKM hanya boleh berisi huruf, angka, dan spasi'
             ]);
 
             $institution->name = $validated['name'];

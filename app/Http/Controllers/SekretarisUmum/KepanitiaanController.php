@@ -36,15 +36,15 @@ class KepanitiaanController extends SekretarisUmumController
     {
         try {
             $request->validate([
-                'name' => ['required', 'string', 'max:255', 'unique:committees,name'],
+                'name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z0-9\s]+$/', 'unique:committees,name'],
                 'year' => ['required', 'integer'],
                 'is_active' => ['required', 'boolean'],
-                'chairman_username' => ['required', 'string', 'max:255', 'unique:users,username'],
-                'chairman_fullname' => ['required', 'string', 'max:255'],
-                'chairman_password' => ['required', 'string', 'min:8'],
-                'secretary_username' => ['required', 'string', 'max:255', 'unique:users,username'],
-                'secretary_fullname' => ['required', 'string', 'max:255'],
-                'secretary_password' => ['required', 'string', 'min:8'],
+                'chairman_username' => ['required', 'string', 'min:8', 'max:12', 'regex:/^[a-zA-Z0-9_]+$/', 'unique:users,username'],
+                'chairman_fullname' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z\s.,]+$/'],
+                'chairman_password' => ['required', 'string', 'min:8', 'max:12'],
+                'secretary_username' => ['required', 'string', 'min:8', 'max:12', 'regex:/^[a-zA-Z0-9_]+$/', 'unique:users,username'],
+                'secretary_fullname' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z\s.,]+$/'],
+                'secretary_password' => ['required', 'string', 'min:8', 'max:12'],  
             ]);
 
             DB::transaction(function () use ($request) {
@@ -112,13 +112,13 @@ class KepanitiaanController extends SekretarisUmumController
             $committee = Committee::with(['chairman', 'secretary'])->findOrFail($id);
 
             $request->validate([
-                'name' => ['required', 'string', 'max:255', 'unique:committees,name,' . $committee->id],
+                'name' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z0-9\s-]+$/', 'unique:committees,name,' . $committee->id],
                 'chairman_year' => ['required', 'integer'],
-                'chairman_is_active' => ['required', 'boolean'],
-                'chairman_username' => ['required', 'string', 'max:255', 'unique:users,username,' . $committee->chairman_id],
-                'chairman_fullname' => ['required', 'string', 'max:255'],
-                'chairman_password' => ['nullable', 'string', 'min:8'],
-                'secretary_username' => ['required', 'string', 'max:255', 'unique:users,username,' . $committee->secretary_id],
+                'chairman_is_active' => ['required', 'boolean'],    
+                'chairman_username' => ['required', 'string', 'min:8', 'max:12', 'regex:/^[a-zA-Z0-9_]+$/', 'unique:users,username,' . $committee->chairman_id],
+                'chairman_fullname' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z\s.,]+$/'],
+                'chairman_password' => ['nullable', 'string', 'min:8', 'max:12'],
+                'secretary_username' => ['required', 'string', 'min:8', 'max:12', 'regex:/^[a-zA-Z0-9_]+$/', 'unique:users,username,' . $committee->secretary_id],
                 'secretary_fullname' => ['required', 'string', 'max:255'],
                 'secretary_password' => ['nullable', 'string', 'min:8'],
             ]);

@@ -23,7 +23,11 @@
                     'label' => 'Nama UKM',
                     'type' => 'text',
                     'required' => true,
-                    'placeholder' => 'Masukkan nama UKM'
+                    'placeholder' => 'Masukkan nama UKM',
+                    'minlength' => '3',
+                    'maxlength' => '30',
+                    'pattern' => '^[a-zA-Z0-9\s]{1,30}$',
+                    'title' => 'Nama UKM hanya boleh berisi huruf, angka, dan spasi (3-30 karakter)'
                 ],
             ]" />
 
@@ -35,7 +39,11 @@
                     'label' => 'Nama UKM',
                     'type' => 'text',
                     'required' => true,
-                    'placeholder' => 'Masukkan nama UKM'
+                    'placeholder' => 'Masukkan nama UKM',
+                    'minlength' => '3',
+                    'maxlength' => '30',
+                    'pattern' => '^[a-zA-Z0-9\s]{1,30}$',
+                    'title' => 'Nama UKM hanya boleh berisi huruf, angka, dan spasi (3-30 karakter)'
                 ],
             ]" />
 

@@ -33,13 +33,40 @@ class PenggunaController extends AdminKemahasiswaanController
     {
         try {
             $request->validate([
-                'username' => ['required', 'string', 'max:255', 'unique:users'],
-                'fullname' => ['required', 'string', 'max:255'],
-                'password' => ['required', Rules\Password::defaults()],
+                'username' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'max:12',
+                    'unique:users',
+                    'regex:/^[a-zA-Z0-9_]+$/'
+                ],
+                'fullname' => [
+                    'required',
+                    'string',
+                    'min:3',
+                    'max:50',
+                    'regex:/^[a-zA-Z\s.,]+$/'
+                ],
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'max:12'
+                ],
                 'role_id' => ['required', 'exists:roles,id'],
                 'institution_id' => ['required', 'exists:institutions,id'],
                 'year' => ['required', 'integer'],
                 'is_active' => ['required', 'boolean'],
+            ], [
+                'username.min' => 'Username minimal 8 karakter',
+                'username.max' => 'Username maksimal 12 karakter',
+                'username.regex' => 'Username hanya boleh berisi huruf, angka, dan underscore',
+                'fullname.min' => 'Nama lengkap minimal 3 karakter',
+                'fullname.max' => 'Nama lengkap maksimal 50 karakter',
+                'fullname.regex' => 'Nama lengkap hanya boleh berisi huruf, spasi, titik, dan koma',
+                'password.min' => 'Password minimal 8 karakter',
+                'password.max' => 'Password maksimal 12 karakter'
             ]);
 
             // Check for existing active user with same role and institution
@@ -90,13 +117,35 @@ class PenggunaController extends AdminKemahasiswaanController
             $user = User::findOrFail($id);
 
             $validated = $request->validate([
-                'username' => 'required|string|max:255|unique:users,username,' . $id,
-                'fullname' => 'required|string|max:255',
+                'username' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'max:12',
+                    'unique:users,username,' . $id,
+                    'regex:/^[a-zA-Z0-9_]+$/'
+                ],
+                'fullname' => [
+                    'required',
+                    'string',
+                    'min:3',
+                    'max:50',
+                    'regex:/^[a-zA-Z\s.,]+$/'
+                ],
                 'role_id' => 'required|exists:roles,id',
                 'institution_id' => 'required|exists:institutions,id',
                 'year' => 'required|integer',
                 'is_active' => 'required|boolean',
-                'password' => 'nullable|string|min:8',
+                'password' => 'nullable|string|min:8|max:12',
+            ], [
+                'username.min' => 'Username minimal 8 karakter',
+                'username.max' => 'Username maksimal 12 karakter',
+                'username.regex' => 'Username hanya boleh berisi huruf, angka, dan underscore',
+                'fullname.min' => 'Nama lengkap minimal 3 karakter',
+                'fullname.max' => 'Nama lengkap maksimal 50 karakter',
+                'fullname.regex' => 'Nama lengkap hanya boleh berisi huruf, spasi, titik, dan koma',
+                'password.min' => 'Password minimal 8 karakter',
+                'password.max' => 'Password maksimal 12 karakter'
             ]);
 
             // Check for existing active user with same role and institution

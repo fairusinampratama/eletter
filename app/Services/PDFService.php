@@ -148,7 +148,12 @@ class PDFService
 
             for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
                 $templateId = $pdf->importPage($pageNo);
-                $pdf->AddPage();
+                
+                // Get the original page size
+                $size = $pdf->getTemplateSize($templateId);
+                
+                // Add page with original size
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
                 $pdf->useTemplate($templateId);
 
                 // Get actual page size in points (pixels at 72dpi)

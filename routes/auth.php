@@ -62,11 +62,11 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::middleware([RoleMiddleware::class . ':5'])->group(function () {
         Route::prefix('sekretaris-panitia')->name('sekretaris-panitia.')->group(function () {
             Route::get('/', function () {
-                return redirect()->route('sekretaris-panitia.surat-panitia.index');
+                return redirect()->route('sekretaris-panitia.kategori-surat.index');
             })->name('dashboard');
 
-            Route::resource('surat-panitia', \App\Http\Controllers\SekretarisPanitia\SuratPanitiaController::class);
             Route::resource('kategori-surat', \App\Http\Controllers\SekretarisPanitia\KategoriSuratController::class);
+            Route::resource('surat-panitia', \App\Http\Controllers\SekretarisPanitia\SuratPanitiaController::class);
         });
     });
 
