@@ -165,9 +165,11 @@
                             <template x-for="(signer, key) in signers" :key="key">
                                 <button type="button" :class="[
                                         activeSignerKey === key ? 'ring-2 ring-primary-600 bg-primary-50 dark:bg-primary-900' : 'bg-white dark:bg-gray-700',
+                                        !signer.isActive ? 'opacity-50 cursor-not-allowed' : '',
                                         'flex-1 flex flex-col items-center rounded-xl shadow p-4 transition focus:outline-none border border-gray-200 dark:border-gray-600'
                                     ]"
-                                    @click="activeSignerKey = key; window.addMarker && addMarker(key, signer.label);">
+                                    @click="signer.isActive && (activeSignerKey = key); signer.isActive && window.addMarker && addMarker(key, signer.label);"
+                                    :disabled="!signer.isActive">
                                     <span class="text-base font-medium text-gray-900 dark:text-white"
                                         x-text="signer.labelFull"></span>
                                     <span class="text-xs text-gray-500 dark:text-gray-400 mb-2"
@@ -179,7 +181,8 @@
                                                     x-text="signer.qr_page"></span></span>
                                         </template>
                                         <template x-if="!signer.isPlaced">
-                                            <span>Belum ditempatkan</span>
+                                            <span
+                                                x-text="signer.isActive ? 'Belum ditempatkan' : 'Penandatangan tidak aktif'"></span>
                                         </template>
                                     </span>
                                 </button>
@@ -414,7 +417,8 @@
                     qr_page: null,
                     qr_x: null,
                     qr_y: null,
-                    isPlaced: false
+                    isPlaced: false,
+                    isActive: @json($users->where('role_id', 3)->where('is_active', true)->first() ? true : false)
                 },
                 ketua_umum: {
                     id: ketuaUmumId,
@@ -425,7 +429,8 @@
                     qr_page: null,
                     qr_x: null,
                     qr_y: null,
-                    isPlaced: false
+                    isPlaced: false,
+                    isActive: @json($users->where('role_id', 2)->where('is_active', true)->first() ? true : false)
                 },
                 pembina: {
                     id: pembinaId,
@@ -436,7 +441,8 @@
                     qr_page: null,
                     qr_x: null,
                     qr_y: null,
-                    isPlaced: false
+                    isPlaced: false,
+                    isActive: @json($users->where('role_id', 6)->where('is_active', true)->first() ? true : false)
                 }
             },
             get selectedSigners() {
@@ -501,26 +507,26 @@
             },
             validateAndSubmit(e) {
                 const form = document.getElementById('surat-form');
-                
+
                 // 1. Kode Surat Validation
                 const codeInput = document.getElementById('code');
                 const codeValue = codeInput.value.trim();
-                
+
                 if (!codeValue) {
                     showCustomAlert('danger', 'Validasi Gagal', ['Kode surat harus diisi']);
                     return;
                 }
-                
+
                 if (codeValue.length < 3) {
                     showCustomAlert('danger', 'Validasi Gagal', ['Kode surat minimal 3 karakter']);
                     return;
                 }
-                
+
                 if (codeValue.length > 100) {
                     showCustomAlert('danger', 'Validasi Gagal', ['Kode surat maksimal 100 karakter']);
                     return;
                 }
-                
+
                 if (!/^[a-zA-Z0-9\s-]+$/.test(codeValue)) {
                     showCustomAlert('danger', 'Validasi Gagal', ['Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda hubung']);
                     return;
@@ -561,6 +567,19 @@
                 const ketuaUmum = Object.values(this.signers).find(s => s.labelFull === 'Ketua Umum');
                 if (!ketuaUmum || !ketuaUmum.isPlaced) {
                     showCustomAlert('danger', 'Validasi Gagal', ['QR untuk penandatangan Ketua Umum wajib ditempatkan']);
+                    return;
+                }
+
+                // 6. Validate Active Signers
+                const inactiveSigners = Object.values(this.signers)
+                    .filter(s => s.isPlaced && !s.isActive)
+                    .map(s => s.labelFull);
+
+                if (inactiveSigners.length > 0) {
+                    showCustomAlert('danger', 'Validasi Gagal', [
+                        'Terdapat penandatangan yang tidak aktif:',
+                        ...inactiveSigners.map(s => `- ${s}`)
+                    ]);
                     return;
                 }
 

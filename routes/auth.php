@@ -38,7 +38,7 @@ Route::middleware(['auth', 'throttle:60,1'])->group(function () {
     Route::middleware([RoleMiddleware::class . ':3'])->group(function () {
         Route::prefix('sekretaris-umum')->name('sekretaris-umum.')->group(function () {
             Route::get('/', function () {
-                return redirect()->route('sekretaris-umum.surat-pengurus.index');
+                return redirect()->route('sekretaris-umum.kategori-surat.index');
             })->name('dashboard');
 
             Route::resource('surat-pengurus', \App\Http\Controllers\SekretarisUmum\SuratPengurusController::class);

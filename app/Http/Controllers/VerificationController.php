@@ -44,7 +44,17 @@ class VerificationController extends Controller
     {
         try {
             $request->validate([
-                'file' => 'required|file|mimes:pdf|max:10240',
+                'file' => [
+                    'required',
+                    'file',
+                    'mimes:pdf',
+                    'max:10240',
+                ],
+            ], [
+                'file.required' => 'Please select a file to upload.',
+                'file.file' => 'The uploaded file is invalid.',
+                'file.mimes' => 'Only PDF files are allowed.',
+                'file.max' => 'The file size must be less than 10MB.',
             ]);
 
             // Find letter

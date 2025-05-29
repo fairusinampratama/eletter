@@ -1,5 +1,7 @@
 <x-head />
 
+<x-alerts.flash-messages />
+
 <x-body>
     <div
         class="flex items-center justify-center min-h-screen py-4 sm:py-6 lg:py-8 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
@@ -50,7 +52,7 @@
                     <div>
                         <label for="file" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Upload
                             PDF Document</label>
-                        <div x-data="{ fileName: null }" class="space-y-2">
+                        <div x-data="{ fileName: null, error: null }" class="space-y-2">
                             <div class="flex items-center justify-center w-full">
                                 <label for="file"
                                     class="flex flex-col items-center justify-center w-full h-48 sm:h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-colors duration-200">
@@ -69,7 +71,23 @@
                                         </p>
                                     </div>
                                     <input id="file" name="file" type="file" class="hidden" accept=".pdf" required
-                                        x-on:change="fileName = $event.target.files[0]?.name" />
+                                        x-on:change="
+                                            const file = $event.target.files[0];
+                                            fileName = file?.name;
+                                            error = null;
+
+                                            if (file) {
+                                                if (!file.name.toLowerCase().endsWith('.pdf')) {
+                                                    error = 'Only PDF files are allowed';
+                                                    $event.target.value = '';
+                                                    fileName = null;
+                                                } else if (file.size > 10 * 1024 * 1024) {
+                                                    error = 'File size must be less than 10MB';
+                                                    $event.target.value = '';
+                                                    fileName = null;
+                                                }
+                                            }
+                                        " />
                                 </label>
                             </div>
                             <div x-show="fileName"
@@ -80,8 +98,10 @@
                                 </svg>
                                 <span x-text="fileName"></span>
                             </div>
+                            <div x-show="error" class="text-sm text-red-600 dark:text-red-400" x-text="error"></div>
                         </div>
-                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Supported format: PDF</p>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Supported format: PDF (Max size: 10MB)
+                        </p>
                     </div>
 
                     <div class="flex items-center justify-end">
@@ -96,21 +116,6 @@
                         </button>
                     </div>
                 </form>
-
-                @if(session('error'))
-                <div class="mt-4 sm:mt-6 p-3 sm:p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 border border-red-200 dark:border-red-900"
-                    role="alert">
-                    <div class="flex items-center">
-                        <svg class="flex-shrink-0 inline w-4 h-4 sm:w-5 sm:h-5 me-2 sm:me-3" aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                                d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
-                        </svg>
-                        <span class="font-medium">Error!</span>
-                        <span class="ml-2">{{ session('error') }}</span>
-                    </div>
-                </div>
-                @endif
             </div>
         </div>
     </div>

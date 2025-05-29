@@ -104,13 +104,15 @@
                             @foreach($letter->signatures as $signature)
                             @php
                             $isInvalid = isset($signatureReasons[$signature->id]);
-                            $statusColor = $isInvalid ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
-                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-                            $statusText = $signature->signed_at
-                            ? ($isInvalid ? 'Invalid Signature' : ($signature->signed_at instanceof \Carbon\Carbon
+                            $isUnsigned = !$signature->signed_at || !$signature->signature;
+                            $statusColor = $isInvalid || $isUnsigned
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                            $statusText = $isUnsigned
+                            ? 'Not signed yet'
+                            : ($isInvalid ? 'Invalid Signature' : ($signature->signed_at instanceof \Carbon\Carbon
                             ? $signature->signed_at->format('M d, Y H:i')
-                            : \Carbon\Carbon::parse($signature->signed_at)->format('M d, Y H:i')))
-                            : 'Not signed yet';
+                            : \Carbon\Carbon::parse($signature->signed_at)->format('M d, Y H:i')));
                             @endphp
                             <div
                                 class="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow duration-200">

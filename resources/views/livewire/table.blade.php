@@ -151,7 +151,11 @@
                                         <x-dynamic-component :component="$column['component']" :letter="$item" />
                                         @endif
                                         @else
-                                        {{ $formatValue(data_get($item, $column['field']), $column) }}
+                                        <div class="max-w-[300px]">
+                                            <span class="block truncate">
+                                                {{ $formatValue(data_get($item, $column['field']), $column) }}
+                                            </span>
+                                        </div>
                                         @endif
                                     </div>
                                 </td>

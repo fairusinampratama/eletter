@@ -60,7 +60,7 @@ $types = [
             </svg>
             <span class="sr-only">{{ ucfirst($type) }} icon</span>
         </div>
-        <div class="ms-3 text-sm font-normal">
+        <div class="ms-3 text-sm font-normal line-clamp-3 max-w-[300px]">
             {{ $slot }}
         </div>
         <button type="button" @click="show = false"

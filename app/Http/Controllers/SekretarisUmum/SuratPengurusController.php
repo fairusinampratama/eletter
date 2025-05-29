@@ -92,6 +92,20 @@ class SuratPengurusController extends SekretarisUmumController
                 'code.regex' => 'Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda hubung',
                 'code.unique' => 'Kode surat sudah digunakan',
             ]);
+
+            // Check for inactive signers
+            $signerIds = collect($request->signers)->pluck('id');
+            $inactiveSigners = User::whereIn('id', $signerIds)
+                ->where('is_active', false)
+                ->get();
+
+            if ($inactiveSigners->isNotEmpty()) {
+                $inactiveNames = $inactiveSigners->map(fn($user) => $user->fullname)->join(', ');
+                throw ValidationException::withMessages([
+                    'signers' => ["Terdapat penandatangan yang tidak aktif: {$inactiveNames}"]
+                ]);
+            }
+
             // Log after validation
             \Log::info('Step 2: Request data after validation', $request->all());
         } catch (\Illuminate\Validation\ValidationException $e) {
