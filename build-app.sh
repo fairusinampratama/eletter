@@ -1,6 +1,8 @@
 #!/bin/bash
 # Make sure this file has executable permissions, run `chmod +x build-app.sh`
 
+php artisan migrate
+
 # Exit the script if any command fails
 set -e
 
