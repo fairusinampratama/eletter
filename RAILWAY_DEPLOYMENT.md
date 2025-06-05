@@ -76,12 +76,8 @@ APP_KEY=base64:your-app-key
 APP_DEBUG=false
 APP_URL=https://your-railway-app-url.up.railway.app
 
-DB_CONNECTION=mysql
-DB_HOST=your-railway-mysql-host
-DB_PORT=3306
-DB_DATABASE=your-database-name
-DB_USERNAME=your-database-username
-DB_PASSWORD=your-database-password
+# Database Configuration
+DATABASE_URL=mysql://root:password@containers-us-west-XX.railway.app:XXXX/railway
 
 MAIL_MAILER=smtp
 MAIL_HOST=your-smtp-host
@@ -96,6 +92,8 @@ CACHE_DRIVER=file
 SESSION_DRIVER=file
 QUEUE_CONNECTION=database
 ```
+
+Note: The `DATABASE_URL` will be automatically provided by Railway when you add a MySQL service. You don't need to manually set it.
 
 ## Step 4: Add Database Service
 
