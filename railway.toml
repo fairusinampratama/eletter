@@ -3,10 +3,12 @@ builder = "nixpacks"
 buildCommand = "composer install --no-dev"
 
 [deploy]
-startCommand = "php artisan migrate --force && vendor/bin/heroku-php-apache2 public/"
+startCommand = "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && vendor/bin/heroku-php-apache2 public/"
 healthcheckPath = "/"
-healthcheckTimeout = 100
+healthcheckTimeout = 300
+restartPolicy = "always"
 
 [env]
 APP_ENV = "production"
 APP_DEBUG = "false"
+LOG_LEVEL = "debug"
