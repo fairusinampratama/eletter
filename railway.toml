@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "composer install --no-dev"
 
 [deploy]
-startCommand = "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public"
+startCommand = "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php -S 0.0.0.0:$PORT public/index.php"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicy = "always"
@@ -12,3 +12,4 @@ restartPolicy = "always"
 APP_ENV = "production"
 APP_DEBUG = "false"
 LOG_LEVEL = "debug"
+APP_URL = "https://${RAILWAY_PUBLIC_DOMAIN}"
