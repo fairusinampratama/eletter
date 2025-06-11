@@ -31,7 +31,8 @@
                 </div>
             </div>
             <div id="pdf-canvas-container"
-                class="w-full max-w-xl flex items-center justify-center border-2 border-dashed border-gray-500 dark:border-gray-600 rounded-lg p-2 hidden relative">
+                class="w-full max-w-xl flex items-center justify-center border-2 border-dashed border-gray-500 dark:border-gray-600 rounded-lg p-2 hidden relative"
+                @touchstart="handleCanvasTouch($event)">
                 <canvas id="pdf-canvas" class="max-w-full h-auto w-full"></canvas>
                 <!-- Marker overlays will be rendered here by JS -->
                 <div id="marker-overlay"
@@ -461,6 +462,45 @@
             get selectedSigners() {
                 return Object.values(this.signers).filter(s => s.isPlaced && s.id);
             },
+            handleCanvasTouch(e) {
+                if (!this.activeSignerKey || !this.signers[this.activeSignerKey].isActive) return;
+
+                const signer = this.signers[this.activeSignerKey];
+                const canvas = document.getElementById('pdf-canvas');
+                const rect = canvas.getBoundingClientRect();
+
+                // Get touch coordinates
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+
+                // Convert to PDF coordinates
+                if (currentViewport) {
+                    const pdfX = x / currentViewport.scale;
+                    const pdfY = y / currentViewport.scale;
+
+                    // Remove existing marker for this signer
+                    markers = markers.filter(m => m.key !== this.activeSignerKey);
+
+                    // Add new marker at touch position
+                    markers.push({
+                        key: this.activeSignerKey,
+                        label: signer.label,
+                        pdfX: pdfX / currentViewport.width,
+                        pdfY: pdfY / currentViewport.height,
+                        placed: true,
+                        qr_page: Alpine.store('pdf').currentPage
+                    });
+
+                    // Update signer state
+                    signer.qr_x = pdfX;
+                    signer.qr_y = pdfY;
+                    signer.qr_page = Alpine.store('pdf').currentPage;
+                    signer.isPlaced = true;
+
+                    renderMarkers();
+                }
+            },
             startDrag(e) {
                 e.preventDefault();
                 const signer = this.signers[this.activeSignerKey];
@@ -579,16 +619,12 @@
                 // 5. Tanda Tangan Validation
                 const ketuaPanitia = this.signers.ketua_panitia;
                 const ketuaUmum = this.signers.ketua_umum;
-                const pembina = this.signers.pembina;
                 let missing = [];
                 if (!ketuaPanitia || !ketuaPanitia.isPlaced) {
                     missing.push('QR untuk penandatangan Ketua Panitia wajib ditempatkan');
                 }
                 if (!ketuaUmum || !ketuaUmum.isPlaced) {
                     missing.push('QR untuk penandatangan Ketua Umum wajib ditempatkan');
-                }
-                if (!pembina || !pembina.isPlaced) {
-                    missing.push('QR untuk penandatangan Pembina wajib ditempatkan');
                 }
                 if (missing.length) {
                     showCustomAlert('danger', 'Validasi Gagal', missing);
