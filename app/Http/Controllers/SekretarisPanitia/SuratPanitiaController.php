@@ -65,7 +65,7 @@ class SuratPanitiaController extends SekretarisPanitiaController
                     'min:3',
                     'max:100',
                     'unique:letters,code',
-                    'regex:/^[a-zA-Z0-9\s-]+$/'
+                    'regex:/^[a-zA-Z0-9\s\-\.\/]+$/'
                 ],
                 'file_path' => 'required|file|mimes:pdf|max:10240',
                 'category_id' => 'required|exists:letter_categories,id',
@@ -79,7 +79,7 @@ class SuratPanitiaController extends SekretarisPanitiaController
             ], [
                 'code.min' => 'Kode surat minimal 3 karakter',
                 'code.max' => 'Kode surat maksimal 100 karakter',
-                'code.regex' => 'Kode surat hanya boleh berisi huruf, angka, spasi, dan tanda hubung',
+                'code.regex' => 'Kode surat hanya boleh berisi huruf, angka, spasi, tanda hubung, titik, dan garis miring',
                 'code.unique' => 'Kode surat sudah digunakan',
             ]);
 
