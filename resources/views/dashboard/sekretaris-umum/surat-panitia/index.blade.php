@@ -59,8 +59,8 @@
                 'label' => 'Sekretaris Panitia',
                 'type' => 'toggle',
                 'required' => false,
-                'value' => $users->where('role_id', 4)->first()->id,
-                'label_text' => $users->where('role_id', 4)->first()->fullname,
+                'value' => $users->where('role_id', 4)->first()?->id ?? null,
+                'label_text' => $users->where('role_id', 4)->first()?->fullname ?? 'Belum ada Sekretaris Panitia',
                 'helper' => 'Bersifat opsional'
             ],
             [
@@ -68,8 +68,8 @@
                 'label' => 'Ketua Panitia',
                 'type' => 'toggle',
                 'required' => true,
-                'value' => $users->where('role_id', 5)->first()->id,
-                'label_text' => $users->where('role_id', 5)->first()->fullname,
+                'value' => $users->where('role_id', 5)->first()?->id ?? null,
+                'label_text' => $users->where('role_id', 5)->first()?->fullname ?? 'Belum ada Ketua Panitia',
                 'helper' => 'Bersifat wajib'
             ],
             [
@@ -77,8 +77,8 @@
                 'label' => 'Ketua Umum',
                 'type' => 'toggle',
                 'required' => true,
-                'value' => $users->where('role_id', 2)->first()->id,
-                'label_text' => $users->where('role_id', 2)->first()->fullname,
+                'value' => $users->where('role_id', 2)->first()?->id ?? null,
+                'label_text' => $users->where('role_id', 2)->first()?->fullname ?? 'Belum ada Ketua Umum',
                 'helper' => 'Bersifat wajib'
             ],
             [
@@ -86,8 +86,8 @@
                 'label' => 'Pembina',
                 'type' => 'toggle',
                 'required' => false,
-                'value' => $users->where('role_id', 6)->first()->id,
-                'label_text' => $users->where('role_id', 6)->first()->fullname,
+                'value' => $users->where('role_id', 6)->first()?->id ?? null,
+                'label_text' => $users->where('role_id', 6)->first()?->fullname ?? 'Belum ada Pembina',
                 'helper' => 'Bersifat opsional'
             ]
         ]" />
