@@ -703,8 +703,6 @@
         const canvas = document.getElementById('pdf-canvas');
         const width = canvas.width / (window.devicePixelRatio || 1);
         const height = canvas.height / (window.devicePixelRatio || 1);
-        // Responsive marker size: 10% of canvas width, min 32px, max 64px
-        const markerSize = Math.max(32, Math.min(64, width * 0.1));
         const currentPage = Alpine.store('pdf').currentPage;
         markers.forEach(marker => {
             if (!marker.placed || marker.qr_page !== currentPage) return;
@@ -712,32 +710,62 @@
             const markerDiv = document.createElement('div');
             markerDiv.className = `marker-qr group absolute z-30 cursor-move bg-transparent ${style.border} border-2 rounded-lg shadow-lg flex items-center justify-center transition hover:scale-105`;
             markerDiv.style.position = 'absolute';
-            markerDiv.style.left = (marker.pdfX * width - 24) + 'px'; // 48/2
+            markerDiv.style.left = (marker.pdfX * width - 24) + 'px';
             markerDiv.style.top = (marker.pdfY * height - 24) + 'px';
             markerDiv.style.width = markerDiv.style.height = '48px';
             markerDiv.style.pointerEvents = 'auto';
 
             markerDiv.innerHTML = `
-              <div class="flex flex-col items-center justify-center w-full h-full">
-                <div class="rounded-full ${style.color} ${style.border} flex items-center justify-center" style="width:32px;height:32px;">
-                  <svg class="w-5 h-5 ${style.text}" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M4 4h6v6H4V4Zm10 10h6v6h-6v-6Zm0-10h6v6h-6V4Zm-4 10h.01v.01H10V14Zm0 4h.01v.01H10V18Zm-3 2h.01v.01H7V20Zm0-4h.01v.01H7V16Zm-3 2h.01v.01H4V18Zm0-4h.01v.01H4V14Z"/>
-                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M7 7h.01v.01H7V7Zm10 10h.01v.01H17V17Z"/>
-                  </svg>
+                <div class="flex flex-col items-center justify-center w-full h-full">
+                    <div class="rounded-full ${style.color} ${style.border} flex items-center justify-center" style="width:32px;height:32px;">
+                        <svg class="w-5 h-5 ${style.text}" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M4 4h6v6H4V4Zm10 10h6v6h-6v-6Zm0-10h6v6h-6V4Zm-4 10h.01v.01H10V14Zm0 4h.01v.01H10V18Zm-3 2h.01v.01H7V20Zm0-4h.01v.01H7V16Zm-3 2h.01v.01H4V18Zm0-4h.01v.01H4V14Z"/>
+                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M7 7h.01v.01H7V7Zm10 10h.01v.01H17V17Z"/>
+                        </svg>
+                    </div>
+                    <span class="mt-1 text-xs font-bold ${style.text}">${style.label}</span>
                 </div>
-                <span class="mt-1 text-xs font-bold ${style.text}">${style.label}</span>
-              </div>
-              <button type="button" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow transition hover:bg-red-700" onclick="deleteMarker('${marker.key}')">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l8 8M6 14L14 6"/>
-                </svg>
-              </button>
+                <button type="button"
+                    class="absolute -top-3 -right-3 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow transition hover:bg-red-700 delete-marker-btn"
+                    data-marker-key="${marker.key}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l8 8M6 14L14 6"/>
+                    </svg>
+                </button>
             `;
-            markerDiv.addEventListener('mousedown', (e) => startMarkerDrag(e, marker, 48));
-            markerDiv.addEventListener('touchstart', (e) => startMarkerDrag(e, marker, 48), { passive: false });
+
+            // Add event listeners for drag
+            markerDiv.addEventListener('mousedown', (e) => {
+                // Don't start drag if clicking delete button
+                if (!e.target.closest('.delete-marker-btn')) {
+                    startMarkerDrag(e, marker, 48);
+                }
+            });
+            markerDiv.addEventListener('touchstart', (e) => {
+                // Don't start drag if touching delete button
+                if (!e.target.closest('.delete-marker-btn')) {
+                    startMarkerDrag(e, marker, 48);
+                }
+            }, { passive: false });
+
             overlay.appendChild(markerDiv);
         });
         syncMarkersToAlpine();
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-marker-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const markerKey = btn.getAttribute('data-marker-key');
+                deleteMarker(markerKey);
+            });
+            btn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const markerKey = btn.getAttribute('data-marker-key');
+                deleteMarker(markerKey);
+            }, { passive: false });
+        });
     }
 
     function startMarkerDrag(e, marker, markerSize) {

@@ -120,4 +120,57 @@ class VerificationController extends Controller
             return back()->with('error', 'An error occurred during verification. Please try again.');
         }
     }
+
+    public function verifyDirect($verification_id, ECDSAService $ecdsaService)
+    {
+        try {
+            // Find letter
+            $letter = Letter::where('verification_id', $verification_id)->firstOrFail();
+
+            // Verify all signatures
+            $valid = true;
+            $invalidSignatures = [];
+            $unsignedSignatures = [];
+            $signatureValidity = [];
+            $signatureReasons = [];
+
+            foreach ($letter->signatures as $signature) {
+                if (!$signature->signed_at || !$signature->signature) {
+                    $unsignedSignatures[] = $signature->signer->fullname;
+                    $signatureValidity[$signature->id] = 'unsigned';
+                    $valid = false;
+                    continue;
+                }
+
+                // Use original_file_hash for signature verification
+                $verificationResult = $ecdsaService->verify(
+                    $letter->original_file_hash,
+                    $signature->signature,
+                    $signature->signer->public_key
+                );
+
+                if (!$verificationResult['valid']) {
+                    $valid = false;
+                    $invalidSignatures[] = $signature->signer->fullname;
+                    $signatureValidity[$signature->id] = 'invalid';
+                    $signatureReasons[$signature->id] = $verificationResult['reason'];
+                } else {
+                    $signatureValidity[$signature->id] = 'valid';
+                }
+            }
+
+            return view('letters.verify-result', [
+                'letter' => $letter,
+                'valid' => $valid,
+                'invalidSignatures' => $invalidSignatures,
+                'unsignedSignatures' => $unsignedSignatures,
+                'signatureValidity' => $signatureValidity,
+                'signatureReasons' => $signatureReasons,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Direct verification error: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred during verification. Please try again.');
+        }
+    }
 }

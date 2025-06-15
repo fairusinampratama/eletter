@@ -706,17 +706,43 @@
                 </div>
                 <span class="mt-1 text-xs font-bold ${style.text}">${style.label}</span>
               </div>
-              <button type="button" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow transition hover:bg-red-700" onclick="deleteMarker('${marker.key}')">
+              <button type="button" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow transition hover:bg-red-700 delete-marker-btn"
+                data-marker-key="${marker.key}">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l8 8M6 14L14 6"/>
                 </svg>
               </button>
             `;
-            markerDiv.addEventListener('mousedown', (e) => startMarkerDrag(e, marker, 48));
-            markerDiv.addEventListener('touchstart', (e) => startMarkerDrag(e, marker, 48), { passive: false });
+            markerDiv.addEventListener('mousedown', (e) => {
+                // Don't start drag if clicking delete button
+                if (!e.target.closest('.delete-marker-btn')) {
+                    startMarkerDrag(e, marker, 48);
+                }
+            });
+            markerDiv.addEventListener('touchstart', (e) => {
+                // Don't start drag if touching delete button
+                if (!e.target.closest('.delete-marker-btn')) {
+                    startMarkerDrag(e, marker, 48);
+                }
+            }, { passive: false });
             overlay.appendChild(markerDiv);
         });
         syncMarkersToAlpine();
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-marker-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const markerKey = btn.getAttribute('data-marker-key');
+                deleteMarker(markerKey);
+            });
+            btn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const markerKey = btn.getAttribute('data-marker-key');
+                deleteMarker(markerKey);
+            }, { passive: false });
+        });
     }
 
     function startMarkerDrag(e, marker, markerSize) {

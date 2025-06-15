@@ -14,8 +14,9 @@
                 ['field' => 'status', 'label' => 'Status'],
                 ['field' => 'signing_status', 'label' => 'Status Tanda Tangan', 'type' => 'component', 'component' => 'signing-status', 'sortable' => false],
             ]" :actions="[
-                ['type' => 'confirm', 'label' => 'Tandatangani Surat'],
-                ['type' => 'view', 'label' => 'Lihat Surat', 'route' => 'letters.view'],
+                ['type' => 'confirm', 'label' => 'Tandatangani'],
+                ['type' => 'view', 'label' => 'Lihat'],
+                ['type' => 'verify', 'label' => 'Verifikasi'],
             ]" :withRelations="['category', 'creator', 'signatures.signer']" :selectable="false" :sortable="true"
         :defaultSort="['field' => 'date', 'direction' => 'desc']" :scopes="['nonCommittee']" />
     <!-- Sign Letter Confirmation Modal -->
