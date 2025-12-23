@@ -54,79 +54,48 @@ class PDFService
     {
         \Log::info('Starting QR code embedding for letter: ' . $letter->id);
 
-        // Ensure directories exist with proper permissions
+        // Use disk('public') properly, mapped to actual public folder
         $documentsPath = Storage::disk('public')->path('documents');
         $qrCodesPath = Storage::disk('public')->path('qr_codes');
 
-        \Log::info('Directories:', [
-            'documents' => $documentsPath,
-            'qr_codes' => $qrCodesPath
-        ]);
-
-        if (!file_exists($documentsPath)) {
+        // Ensure directories exist
+        if (!is_dir($documentsPath))
             mkdir($documentsPath, 0755, true);
-            \Log::info('Created documents directory');
-        }
-        if (!file_exists($qrCodesPath)) {
+        if (!is_dir($qrCodesPath))
             mkdir($qrCodesPath, 0755, true);
-            \Log::info('Created qr_codes directory');
-        }
 
+        \Log::info('Directories ready', ['documents' => $documentsPath, 'qr_codes' => $qrCodesPath]);
+
+        // Get absolute path of original PDF
         $originalPdfPath = Storage::disk('public')->path($letter->file_path);
+        if (!file_exists($originalPdfPath)) {
+            throw new \Exception("Original PDF not found: {$originalPdfPath}");
+        }
         \Log::info('Original PDF path: ' . $originalPdfPath);
 
         $pdf = new \setasign\Fpdi\Fpdi();
         $pageQRCodes = [];
 
-        // Prepare QR codes for each signature
+        // Prepare QR codes
         foreach ($letter->signatures as $signature) {
-            \Log::info('Processing signature:', [
-                'id' => $signature->id,
-                'metadata' => $signature->qr_metadata
-            ]);
+            $meta = is_string($signature->qr_metadata) ? json_decode($signature->qr_metadata, true) : $signature->qr_metadata;
 
-            $meta = $signature->qr_metadata;
-            if (is_string($meta)) {
-                $meta = json_decode($meta, true);
-            }
             if (!is_array($meta) || !isset($meta['page'], $meta['x'], $meta['y'])) {
-                \Log::warning('Skipping signature due to missing metadata', [
-                    'signature_id' => $signature->id,
-                    'metadata' => $meta
-                ]);
+                \Log::warning('Skipping invalid signature metadata', ['signature_id' => $signature->id]);
                 continue;
             }
 
-            // Generate QR code content
             $qrContent = url("verify/{$letter->verification_id}/{$signature->signature}");
-            \Log::info('QR Content: ' . $qrContent);
-
             $qrCode = new \Endroid\QrCode\QrCode($qrContent);
-            $qrCode->setSize(300);
-            $qrCode->setMargin(10);
+            $qrCode->setSize(300)->setMargin(10);
 
             $writer = new \Endroid\QrCode\Writer\PngWriter();
             $result = $writer->write($qrCode);
 
-            // Use absolute path for QR code storage
-            $qrPath = 'qr_codes/' . $letter->verification_id . '_' . $signature->id . '.png';
-            $fullQrPath = Storage::disk('public')->path($qrPath);
+            $qrRelativePath = 'qr_codes/' . $letter->verification_id . '_' . $signature->id . '.png';
+            $fullQrPath = Storage::disk('public')->path($qrRelativePath);
+            Storage::disk('public')->put($qrRelativePath, $result->getString());
 
-            \Log::info('Saving QR code:', [
-                'relative_path' => $qrPath,
-                'full_path' => $fullQrPath
-            ]);
-
-            // Ensure the QR code is saved
-            if (!Storage::disk('public')->put($qrPath, $result->getString())) {
-                \Log::error('Failed to save QR code', [
-                    'path' => $qrPath,
-                    'full_path' => $fullQrPath
-                ]);
-                throw new \Exception("Failed to save QR code to: {$qrPath}");
-            }
-
-            // Group QR codes by page
             $pageQRCodes[$meta['page']][] = [
                 'path' => $fullQrPath,
                 'x' => $meta['x'],
@@ -134,97 +103,62 @@ class PDFService
                 'width' => 20,
                 'height' => 20,
             ];
-
-            \Log::info('QR code added to page', [
-                'page' => $meta['page'],
-                'x' => $meta['x'],
-                'y' => $meta['y']
-            ]);
         }
 
         try {
             $pageCount = $pdf->setSourceFile($originalPdfPath);
-            \Log::info('PDF page count: ' . $pageCount);
 
             for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
                 $templateId = $pdf->importPage($pageNo);
-                
-                // Get the original page size
                 $size = $pdf->getTemplateSize($templateId);
-                
-                // Add page with original size
+
                 $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
                 $pdf->useTemplate($templateId);
 
-                // Get actual page size in points (pixels at 72dpi)
-                $pageSize = $pdf->getTemplateSize($templateId);
-                $pageWidthPx = $pageSize['width'];
-                $pageHeightPx = $pageSize['height'];
-                $pageWidthMm = $pdf->GetPageWidth();
-                $pageHeightMm = $pdf->GetPageHeight();
-
-                \Log::info('Page dimensions:', [
-                    'page' => $pageNo,
-                    'width_px' => $pageWidthPx,
-                    'height_px' => $pageHeightPx,
-                    'width_mm' => $pageWidthMm,
-                    'height_mm' => $pageHeightMm
-                ]);
-
-                // Place all QR codes for this page
                 if (isset($pageQRCodes[$pageNo])) {
                     foreach ($pageQRCodes[$pageNo] as $qr) {
-                        // Convert points (72dpi) to mm and adjust for center positioning
                         $xMm = ($qr['x'] * 0.352777778) - ($qr['width'] / 2);
                         $yMm = ($qr['y'] * 0.352777778) - ($qr['height'] / 2);
-
-                        \Log::info('Placing QR code:', [
-                            'page' => $pageNo,
-                            'original_x' => $qr['x'],
-                            'original_y' => $qr['y'],
-                            'x_mm' => $xMm,
-                            'y_mm' => $yMm,
-                            'path' => $qr['path']
-                        ]);
-
                         $this->addQRCodeToPage($pdf, $qr['path'], $xMm, $yMm, $qr['width'], $qr['height']);
                     }
                 }
             }
 
-            $modifiedPdfPath = 'documents/' . $letter->verification_id . '_signed.pdf';
-            $fullModifiedPath = Storage::disk('public')->path($modifiedPdfPath);
-
-            \Log::info('Saving modified PDF:', [
-                'path' => $modifiedPdfPath,
-                'full_path' => $fullModifiedPath
-            ]);
-
+            // Save modified PDF
+            $modifiedPdfRelative = 'documents/' . $letter->verification_id . '_signed.pdf';
+            $fullModifiedPath = Storage::disk('public')->path($modifiedPdfRelative);
             $pdf->Output($fullModifiedPath, 'F');
 
             // Clean up QR images
             foreach ($pageQRCodes as $qrs) {
                 foreach ($qrs as $qr) {
-                    Storage::disk('public')->delete($qr['path']);
+                    Storage::disk('public')->delete(str_replace(Storage::disk('public')->path(''), '', $qr['path']));
                 }
             }
 
-            return $modifiedPdfPath;
+            // Update letter hashes
+            $letter->update([
+                'file_path' => $modifiedPdfRelative,
+                'file_hash' => hash_file('sha256', $fullModifiedPath)
+            ]);
+
+            return $modifiedPdfRelative;
         } catch (\Exception $e) {
-            \Log::error('Error in PDF processing:', [
+            \Log::error('PDF processing failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Clean up on error
             foreach ($pageQRCodes as $qrs) {
                 foreach ($qrs as $qr) {
-                    Storage::disk('public')->delete($qr['path']);
+                    Storage::disk('public')->delete(str_replace(Storage::disk('public')->path(''), '', $qr['path']));
                 }
             }
+
             throw $e;
         }
     }
+
 
     /**
      * Add QR code to a PDF page

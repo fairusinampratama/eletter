@@ -123,21 +123,14 @@ class SuratPengurusController extends SekretarisUmumController
             // Log before file storage
             \Log::info('Step 3: Before file storage', $request->all());
 
-            // Step 3: store file
-            $path = $request->file('file_path')->store('documents', 'public');
+            // Store the uploaded file in public disk
+            $relativePath = $request->file('file_path')->store('documents', 'public');
 
-            if (!$path) {
-                throw new \Exception("File upload failed.");
-            }
+            // Get absolute path (works for both local and production)
+            $absolutePath = Storage::disk('public')->path($relativePath);
 
-            // Step 4: get full path & hash
-            $fullPath = Storage::disk('public')->path($path);
-
-            if (!file_exists($fullPath)) {
-                throw new \Exception("File not found after upload: {$fullPath}");
-            }
-
-            $originalFileHash = hash_file('sha256', $fullPath);
+            // Compute hash safely
+            $originalFileHash = hash_file('sha256', $absolutePath);
 
             // Prepare letter data
             $letterData = [
@@ -145,7 +138,7 @@ class SuratPengurusController extends SekretarisUmumController
                 'code' => $request->code,
                 'category_id' => $request->category_id,
                 'creator_id' => $currentUser->id,
-                'file_path' => $path,
+                'file_path' => $relativePath,
                 'file_hash' => $originalFileHash,
                 'original_file_hash' => $originalFileHash,
                 'date' => $request->date,
