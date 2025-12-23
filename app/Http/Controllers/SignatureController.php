@@ -7,6 +7,8 @@ use App\Services\ECDSAService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PDFService;
+use Illuminate\Support\Facades\Storage;
+
 
 class SignatureController extends Controller
 {
@@ -65,7 +67,7 @@ class SignatureController extends Controller
             // Sign using user's private key
             $signatureData = $ecdsaService->sign($letter->file_hash, $currentUser->private_key);
 
-            // If signature record does not exist, create it with proper order
+            // Create signature record if not exists
             if (!$signature) {
                 $order = $this->getOrderForRole($currentUser->role_id, $letter);
                 $signature = $letter->signatures()->create([
@@ -74,23 +76,30 @@ class SignatureController extends Controller
                 ]);
             }
 
-            // Update the signature record
+            // Update signature record
             $signature->update([
                 'signature' => $signatureData,
                 'signed_at' => now(),
             ]);
-            // Check if this was the last signature needed
+
+            // Check if all signatures are completed
             $allSigned = $letter->signatures()->whereNull('signed_at')->count() === 0;
+
             if ($allSigned) {
-                // Add all QR codes to PDF and update hash
                 $pdfService = app(PDFService::class);
+
+                // Embed QR codes into PDF
                 $signedPath = $pdfService->embedQRCodes($letter);
 
                 if ($signedPath) {
-                    // Update letter with new file path and hash, preserve original_file_hash
+                    // Compute full path for hash_file
+                    $fullPath = Storage::disk('public')->path($signedPath);
+
+                    // Update letter with new file path and hash
                     $letter->update([
                         'file_path' => $signedPath,
-                        'file_hash' => hash_file('sha256', storage_path('app/public/' . $signedPath)),
+                        // FIX: Added 'sha256' as the first argument
+                        'file_hash' => hash_file('sha256', $fullPath),
                         'status' => 'signed',
                         'original_file_hash' => $letter->original_file_hash,
                     ]);
