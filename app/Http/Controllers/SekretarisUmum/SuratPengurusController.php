@@ -123,9 +123,21 @@ class SuratPengurusController extends SekretarisUmumController
             // Log before file storage
             \Log::info('Step 3: Before file storage', $request->all());
 
-            // Store original PDF and calculate hash
+            // Step 3: store file
             $path = $request->file('file_path')->store('documents', 'public');
-            $originalFileHash = hash_file('sha256', storage_path('app/public/' . $path));
+
+            if (!$path) {
+                throw new \Exception("File upload failed.");
+            }
+
+            // Step 4: get full path & hash
+            $fullPath = Storage::disk('public')->path($path);
+
+            if (!file_exists($fullPath)) {
+                throw new \Exception("File not found after upload: {$fullPath}");
+            }
+
+            $originalFileHash = hash_file('sha256', $fullPath);
 
             // Prepare letter data
             $letterData = [
@@ -151,7 +163,7 @@ class SuratPengurusController extends SekretarisUmumController
 
             // Sort signers by role order: Sekretaris Umum (3), Ketua Umum (2), Pembina (6)
             $roleOrder = [3, 2, 6];
-            $signers = collect($request->signers)->sortBy(function($signer) use ($roleOrder) {
+            $signers = collect($request->signers)->sortBy(function ($signer) use ($roleOrder) {
                 $roleId = \App\Models\User::find($signer['id'])->role_id;
                 $idx = array_search($roleId, $roleOrder);
                 return $idx === false ? 99 : $idx;

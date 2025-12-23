@@ -18,9 +18,9 @@ class LetterSeeder extends Seeder
     {
         // Get some existing users and categories
         $ketuaUmum = User::where('username', 'ketuaumum')->first();
-        $sekretarisUmum = User::where('username', 'sekretarisumum')->first();
+        $sekretarisUmum = User::where('username', 'sekumsekum')->first();
         $ketuaPanitia = User::where('username', 'ketuapanitia')->first();
-        $sekretarisPanitia = User::where('username', 'sekretarispanitia')->first();
+        $sekretarisPanitia = User::where('username', 'sekpansekpan')->first();
 
         // Get categories
         $undanganCategory = LetterCategory::where('name', 'Surat Undangan')->firstOrFail();

@@ -16,7 +16,7 @@ class CommitteeSeeder extends Seeder
     {
         // Get existing users
         $ketuaPanitia = User::where('username', 'ketuapanitia')->first();
-        $sekretarisPanitia = User::where('username', 'sekretarispanitia')->first();
+        $sekretarisPanitia = User::where('username', 'sekpansekpan')->first();
 
         // Create committees
         Committee::create([

@@ -716,22 +716,22 @@
             markerDiv.style.pointerEvents = 'auto';
 
             markerDiv.innerHTML = `
-                <div class="flex flex-col items-center justify-center w-full h-full">
-                    <div class="rounded-full ${style.color} ${style.border} flex items-center justify-center" style="width:32px;height:32px;">
-                        <svg class="w-5 h-5 ${style.text}" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M4 4h6v6H4V4Zm10 10h6v6h-6v-6Zm0-10h6v6h-6V4Zm-4 10h.01v.01H10V14Zm0 4h.01v.01H10V18Zm-3 2h.01v.01H7V20Zm0-4h.01v.01H7V16Zm-3 2h.01v.01H4V18Zm0-4h.01v.01H4V14Z"/>
-                            <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M7 7h.01v.01H7V7Zm10 10h.01v.01H17V17Z"/>
-                        </svg>
-                    </div>
-                    <span class="mt-1 text-xs font-bold ${style.text}">${style.label}</span>
+              <div class="flex flex-col items-center justify-center w-full h-full">
+                <div class="rounded-full ${style.color} ${style.border} flex items-center justify-center" style="width:32px;height:32px;">
+                  <svg class="w-5 h-5 ${style.text}" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M4 4h6v6H4V4Zm10 10h6v6h-6v-6Zm0-10h6v6h-6V4Zm-4 10h.01v.01H10V14Zm0 4h.01v.01H10V18Zm-3 2h.01v.01H7V20Zm0-4h.01v.01H7V16Zm-3 2h.01v.01H4V18Zm0-4h.01v.01H4V14Z"/>
+                    <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M7 7h.01v.01H7V7Zm10 10h.01v.01H17V17Z"/>
+                  </svg>
                 </div>
+                <span class="mt-1 text-xs font-bold ${style.text}">${style.label}</span>
+              </div>
                 <button type="button"
                     class="absolute -top-3 -right-3 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow transition hover:bg-red-700 delete-marker-btn"
                     data-marker-key="${marker.key}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l8 8M6 14L14 6"/>
-                    </svg>
-                </button>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l8 8M6 14L14 6"/>
+                </svg>
+              </button>
             `;
 
             // Add event listeners for drag
